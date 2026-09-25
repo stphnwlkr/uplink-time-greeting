@@ -16,8 +16,10 @@
 .wp-block-time-greeting-block-time-greeting.has-text-align-center { text-align: center; }
 .wp-block-time-greeting-block-time-greeting.has-text-align-right { text-align: right; }
 
-.utg-schedule{margin:0;max-width:44rem}
-.utg-schedule-day{display:flex;justify-content:space-between;gap:1.5rem;padding:.55rem 0;border-bottom:1px solid currentColor}
-.utg-schedule-day dt{font-weight:600}
-.utg-schedule-day dd{margin:0;text-align:right}
-.utg-schedule-day.is-today dt{font-weight:800}
+.utg-schedule{--utg-schedule-gap:1.5rem;--utg-schedule-padding:.55rem;--utg-schedule-border:currentColor;width:100%;margin:0}
+.utg-schedule__day{display:grid;grid-template-columns:minmax(8ch,1fr) minmax(0,2fr);gap:var(--utg-schedule-gap);padding-block:var(--utg-schedule-padding);border-block-end:1px solid var(--utg-schedule-border)}
+.utg-schedule__name{font-weight:600}
+.utg-schedule__hours{margin:0;text-align:end}
+.utg-schedule__day--today .utg-schedule__name{font-weight:800}
+.utg-schedule__separator{margin-inline:.2em}
+.utg-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

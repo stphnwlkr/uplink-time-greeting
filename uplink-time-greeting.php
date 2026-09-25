@@ -43,6 +43,8 @@ class UplinkTimeGreeting {
         add_action('admin_init', array($this, 'admin_init'));
         add_filter('etch/dynamic_data/option', array($this, 'etch_data'));
         add_filter('bricks/dynamic_tags_list', array($this, 'bricks_tags'));
+        add_filter('bricks/setup/control_options', array($this, 'bricks_query_options'));
+        add_filter('bricks/query/run', array($this, 'bricks_schedule_query'), 10, 2);
         add_filter('bricks/dynamic_data/render_tag', array($this, 'bricks_render_tag'), 20, 3);
         add_filter('bricks/dynamic_data/render_content', array($this, 'bricks_render_content'), 20, 3);
         add_filter('bricks/frontend/render_data', array($this, 'bricks_render_content'), 20, 2);
@@ -573,6 +575,7 @@ class UplinkTimeGreeting {
             $day = ($start + $offset) % 7;
             $profile = $this->profile_for_day($settings, $day);
             $hours = array();
+            $windows = array();
             if (empty($profile['closed'])) {
                 foreach ($profile['intervals'] as $index => $interval) {
                     if ('opening' !== $interval['event']) {
@@ -604,13 +607,18 @@ class UplinkTimeGreeting {
                     }
                     $from = $sunday->modify('+' . $day . ' days')->setTime((int) substr($interval['start'], 0, 2), (int) substr($interval['start'], 3, 2));
                     $from_label = wp_date($time_format, $from->getTimestamp(), wp_timezone());
+                    $window = array('start' => $interval['start'], 'start_label' => $from_label, 'end' => '', 'end_label' => '', 'overnight' => false);
                     if (null === $closing) {
                         /* translators: %s: opening time without a matching closing time. */
                         $hours[] = sprintf(__('From %s', 'uplink-time-greeting'), $from_label);
                     } else {
                         $to = $sunday->modify('+' . ($closing_day === $day ? $day : $day + 1) . ' days')->setTime((int) substr($closing, 0, 2), (int) substr($closing, 3, 2));
-                        $hours[] = $from_label . '–' . wp_date($time_format, $to->getTimestamp(), wp_timezone());
+                        $window['end'] = $closing;
+                        $window['end_label'] = wp_date($time_format, $to->getTimestamp(), wp_timezone());
+                        $window['overnight'] = $closing_day !== $day;
+                        $hours[] = $from_label . '–' . $window['end_label'];
                     }
+                    $windows[] = $window;
                 }
             }
             $rows[] = array(
@@ -618,6 +626,9 @@ class UplinkTimeGreeting {
                 'number' => $day,
                 'day' => wp_date('l', $sunday->modify('+' . $day . ' days')->getTimestamp(), wp_timezone()),
                 'hours' => !empty($profile['closed']) ? __('Closed', 'uplink-time-greeting') : ($hours ? implode(', ', $hours) : __('Hours not set', 'uplink-time-greeting')),
+                'state' => !empty($profile['closed']) ? 'closed' : ($hours ? 'open' : 'unset'),
+                'is_today' => false,
+                'windows' => $windows,
             );
         }
         return $rows;
@@ -633,7 +644,31 @@ class UplinkTimeGreeting {
         }
         $html = '<dl class="utg-schedule" aria-label="' . esc_attr__('Weekly business hours', 'uplink-time-greeting') . '">';
         foreach ($this->schedule_rows() as $row) {
-            $html .= '<div class="utg-schedule-day' . ($row['number'] === $today ? ' is-today' : '') . '"><dt>' . esc_html($row['day']) . '</dt><dd>' . esc_html($row['hours']) . '</dd></div>';
+            $html .= '<div class="utg-schedule__day utg-schedule__day--' . esc_attr($row['state']) . ($row['number'] === $today ? ' utg-schedule__day--today' : '') . '" data-day="' . esc_attr($row['key']) . '" data-state="' . esc_attr($row['state']) . '">';
+            $html .= '<dt class="utg-schedule__name">' . esc_html($row['day']) . '</dt><dd class="utg-schedule__hours">';
+            if (!$row['windows']) {
+                $html .= '<span class="utg-schedule__status">' . esc_html($row['hours']) . '</span>';
+            } else {
+                foreach ($row['windows'] as $index => $window) {
+                    if ($index) {
+                        $html .= '<span class="utg-schedule__between">, </span>';
+                    }
+                    $html .= '<span class="utg-schedule__interval"' . ($window['overnight'] ? ' data-overnight="true"' : '') . '>';
+                    if ('' === $window['end']) {
+                        $html .= '<span class="utg-schedule__from">' . esc_html__('From', 'uplink-time-greeting') . ' </span>';
+                    }
+                    $html .= '<time class="utg-schedule__opens" datetime="' . esc_attr($window['start']) . '">' . esc_html($window['start_label']) . '</time>';
+                    if ('' !== $window['end']) {
+                        $html .= '<span class="utg-schedule__separator" aria-hidden="true">–</span><span class="utg-visually-hidden">' . esc_html__(' to ', 'uplink-time-greeting') . '</span>';
+                        $html .= '<time class="utg-schedule__closes" datetime="' . esc_attr($window['end']) . '">' . esc_html($window['end_label']) . '</time>';
+                        if ($window['overnight']) {
+                            $html .= '<span class="utg-visually-hidden">' . esc_html__(' next day', 'uplink-time-greeting') . '</span>';
+                        }
+                    }
+                    $html .= '</span>';
+                }
+            }
+            $html .= '</dd></div>';
         }
         return $html . '</dl>';
     }
@@ -655,12 +690,18 @@ class UplinkTimeGreeting {
         if (!is_array($data)) {
             return $data;
         }
+        $week = $this->schedule_rows();
+        foreach ($week as &$row) {
+            $row['is_today'] = $row['number'] === (int) wp_date('w', time(), wp_timezone());
+        }
+        unset($row);
         $data['time_greeting'] = array(
             'greeting' => $this->plain_value('greeting'),
             'date' => $this->plain_value('date'),
             'both' => $this->plain_value('both'),
             'schedule' => $this->plain_value('schedule'),
-            'days' => array_reduce($this->schedule_rows(), function ($days, $row) { $days[$row['key']] = $row['hours']; return $days; }, array()),
+            'days' => array_reduce($week, function ($days, $row) { $days[$row['key']] = $row['hours']; return $days; }, array()),
+            'week' => $week,
         );
         return $data;
     }
@@ -679,7 +720,49 @@ class UplinkTimeGreeting {
                 'group' => __('Uplink Time Greeting', 'uplink-time-greeting'),
             );
         }
+        foreach (array(
+            'day' => __('Schedule day', 'uplink-time-greeting'),
+            'hours' => __('Schedule hours', 'uplink-time-greeting'),
+            'state' => __('Schedule state', 'uplink-time-greeting'),
+            'key' => __('Schedule day key', 'uplink-time-greeting'),
+            'today' => __('Schedule is today (1 or 0)', 'uplink-time-greeting'),
+        ) as $key => $label) {
+            $tags[] = array('name' => '{utg_' . $key . '}', 'label' => $label, 'group' => __('Uplink Time Greeting', 'uplink-time-greeting'));
+        }
         return $tags;
+    }
+
+    /** Expose the ordered seven-day schedule as a native Bricks Query Loop source. */
+    public function bricks_query_options($options) {
+        $options['queryTypes']['utg_schedule'] = __('Uplink Weekly Schedule', 'uplink-time-greeting');
+        return $options;
+    }
+
+    public function bricks_schedule_query($results, $query) {
+        if (!is_object($query) || !isset($query->object_type) || 'utg_schedule' !== $query->object_type) {
+            return $results;
+        }
+        $rows = $this->schedule_rows();
+        $today = (int) wp_date('w', time(), wp_timezone());
+        foreach ($rows as &$row) {
+            $row['is_today'] = $row['number'] === $today;
+        }
+        unset($row);
+        return $rows;
+    }
+
+    private function bricks_schedule_field($key) {
+        if (!class_exists('\\Bricks\\Query') || 'utg_schedule' !== \Bricks\Query::get_query_object_type()) {
+            return null;
+        }
+        $row = \Bricks\Query::get_loop_object();
+        if (!is_array($row) || !array_key_exists('day', $row)) {
+            return null;
+        }
+        if ('today' === $key) {
+            return !empty($row['is_today']) ? '1' : '0';
+        }
+        return isset($row[$key]) && is_scalar($row[$key]) ? (string) $row[$key] : '';
     }
 
     public function bricks_render_tag($tag, $post = null, $context = 'text') {
@@ -687,6 +770,10 @@ class UplinkTimeGreeting {
             return $tag;
         }
         $key = trim($tag, '{}');
+        if (in_array($key, array('utg_day', 'utg_hours', 'utg_state', 'utg_key', 'utg_today'), true)) {
+            $value = $this->bricks_schedule_field(substr($key, 4));
+            return null === $value ? $tag : esc_html($value);
+        }
         if (!in_array($key, array('tgb_greeting', 'tgb_date', 'tgb_both', 'tgb_schedule'), true)) {
             return $tag;
         }
@@ -694,8 +781,14 @@ class UplinkTimeGreeting {
     }
 
     public function bricks_render_content($content, $post = null, $context = 'text') {
-        if (!is_string($content) || false === strpos($content, '{tgb_')) {
+        if (!is_string($content) || (false === strpos($content, '{tgb_') && false === strpos($content, '{utg_'))) {
             return $content;
+        }
+        foreach (array('day', 'hours', 'state', 'key', 'today') as $key) {
+            $value = $this->bricks_schedule_field($key);
+            if (null !== $value) {
+                $content = str_replace('{utg_' . $key . '}', esc_html($value), $content);
+            }
         }
         foreach (array('greeting', 'date', 'both', 'schedule') as $key) {
             $content = str_replace('{tgb_' . $key . '}', esc_html($this->plain_value($key)), $content);
@@ -1113,8 +1206,8 @@ class UplinkTimeGreeting {
         ?>
         <div class="tgb-usage-grid">
             <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('WORDPRESS', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Insert the Uplink Time Greeting block, then choose greeting, date, both, or weekly schedule in the block sidebar.', 'uplink-time-greeting'); ?></p></section>
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('BRICKS', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Dynamic tags', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Add one of these tags to a text element:', 'uplink-time-greeting'); ?></p><p><code>{tgb_greeting}</code> <code>{tgb_date}</code> <code>{tgb_both}</code> <code>{tgb_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a formatted schedule or live countdown.', 'uplink-time-greeting'); ?></p></section>
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('ETCH', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Options data', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Add an options data key to a text element:', 'uplink-time-greeting'); ?></p><p><code>{options.time_greeting.greeting}</code><br><code>{options.time_greeting.date}</code><br><code>{options.time_greeting.both}</code><br><code>{options.time_greeting.schedule}</code><br><code>{options.time_greeting.days.monday}</code></p><p><?php esc_html_e('Options data resolves when the page renders. Use a shortcode-capable element for a formatted schedule or live countdown.', 'uplink-time-greeting'); ?></p></section>
+            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('BRICKS', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements for each day, then style them in Bricks:', 'uplink-time-greeting'); ?></p><p><code>{utg_day}</code> <code>{utg_hours}</code> <code>{utg_state}</code> <code>{utg_key}</code> <code>{utg_today}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [time_greeting display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-time-greeting'); ?></p><p><code>{tgb_greeting}</code> <code>{tgb_date}</code> <code>{tgb_both}</code> <code>{tgb_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a live countdown.', 'uplink-time-greeting'); ?></p></section>
+            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('ETCH', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Options data', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Loop through the ordered week array to build semantic markup with your own classes:', 'uplink-time-greeting'); ?></p><p><code>{#loop options.time_greeting.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day includes state, is_today, and windows with machine-readable opening and closing times. Use a shortcode-capable element for the ready-made markup.', 'uplink-time-greeting'); ?></p></section>
             <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('SHORTCODE', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-time-greeting'); ?></h2><p><code>[time_greeting]</code> <code>[time_greeting display="both"]</code> <code>[time_greeting display="schedule"]</code></p><p><code>time_greeting_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-time-greeting'); ?></p></section>
         </div>
         <?php

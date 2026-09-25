@@ -16,7 +16,7 @@ Build reusable daily schedules with up to 24 time entries each. Assign the same 
 
 Use {time} and {tz} in messages, or {countdown} for time until the next entry. {next_label} and {next_time} describe that entry. Mark an entry as Opening to use {opening_countdown} and {opening_time}, even when the next opening is on another day. Example: a 5:00 AM message can say "It's {time}. We open in {countdown}." before a 7:00 AM Opening entry.
 
-The WordPress block and shortcode update countdowns on the page and refresh at schedule changes. Bricks dynamic tags and Etch options data resolve the current value when the page renders; for a live countdown in either builder, use a shortcode-capable element. A weekly schedule output uses the site's Week Starts On setting. The plugin also offers editable date wording, a timezone setting, and output examples for greeting, date, both, and schedule.
+The WordPress block and shortcode render semantic, styleable weekly hours and refresh at schedule changes. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements; its Shortcode element can show the ready-made markup. Etch receives an ordered week array for custom markup. Bricks dynamic tags and Etch text options resolve when the page renders; for a live countdown in either builder, use a shortcode-capable element. Weekly schedule output uses the site's Week Starts On setting. The plugin also offers editable date wording, a timezone setting, and output examples for greeting, date, both, and schedule.
 
 Existing Time Greeting Block content keeps working after you deactivate that plugin and activate this one. On first activation, this plugin copies its saved settings without removing the old data.
 
@@ -40,11 +40,11 @@ Mark an entry as Opening. Use {opening_countdown} in an earlier message. {countd
 
 = How do I use it in Bricks? =
 
-Insert {tgb_greeting}, {tgb_date}, {tgb_both}, or {tgb_schedule} in a dynamic text field. These tag names are retained for existing content. Use [time_greeting] or [time_greeting display="schedule"] in a Shortcode element for live or formatted output.
+For a custom layout, enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements with {utg_day} and {utg_hours}; {utg_state}, {utg_key}, and {utg_today} are also available inside the loop. The query follows WordPress's Week Starts On setting and includes closed days. For semantic hours, place the loop's Div inside a dl and set the day and hours child HTML tags to dt and dd. A Shortcode element with [time_greeting display="schedule"] provides ready-made semantic output. Insert {tgb_greeting}, {tgb_date}, {tgb_both}, or {tgb_schedule} in a dynamic text field for inline text. Use [time_greeting] in a Shortcode element for a live countdown.
 
 = How do I use it in Etch? =
 
-Insert {options.time_greeting.greeting}, {options.time_greeting.date}, {options.time_greeting.both}, or {options.time_greeting.schedule} in a text element. Individual day hours are available as {options.time_greeting.days.monday}, and so on. Use a shortcode-capable element for a live countdown or formatted schedule.
+Loop over {options.time_greeting.week} to build a schedule with your own semantic HTML and classes. Every day includes its name, state, today flag, text hours, and opening/closing windows. Insert {options.time_greeting.greeting}, {options.time_greeting.date}, {options.time_greeting.both}, or {options.time_greeting.schedule} in a text element for inline text. Use a shortcode-capable element for a live countdown or the ready-made schedule markup.
 
 = Is there a shortcode? =
 
