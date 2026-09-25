@@ -182,7 +182,7 @@
                         attributes: attributes,
                         EmptyResponsePlaceholder: () => el(Placeholder, {
                             icon: 'clock',
-                            label: __('Uplink Business Hours & Greetings', 'uplink-time-greeting')
+                            label: __('Uplink Hours & Greetings', 'uplink-time-greeting')
                         }, __('Loading preview...', 'uplink-time-greeting')),
                         ErrorResponsePlaceholder: ({ response }) => el(Placeholder, {
                             icon: 'warning',
@@ -197,7 +197,7 @@
     // Register the block
     registerBlockType('time-greeting-block/time-greeting', {
         apiVersion: 3,
-        title: __('Uplink Business Hours & Greetings', 'uplink-time-greeting'),
+        title: __('Uplink Hours & Greetings', 'uplink-time-greeting'),
         category: 'widgets',
         icon: 'clock',
         attributes: {

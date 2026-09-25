@@ -3,7 +3,7 @@
     "apiVersion": 3,
     "name": "time-greeting-block/time-greeting",
     "version": "1.0.0",
-    "title": "Uplink Business Hours & Greetings",
+    "title": "Uplink Hours & Greetings",
     "category": "widgets",
     "icon": "clock",
     "description": "Display greetings, opening countdowns, and dates from a reusable seven-day schedule.",
