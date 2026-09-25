@@ -45,6 +45,13 @@
             return Array.from(container.querySelectorAll('.utg-profile'));
         }
 
+        function resizeMessage(field) {
+            field.style.height = '42px';
+            field.style.height = Math.min(Math.max(field.scrollHeight + 2, 42), 112) + 'px';
+        }
+
+        container.querySelectorAll('.utg-message-field textarea').forEach(resizeMessage);
+
         function updateChoices() {
             const choices = profiles().map(function (profile) {
                 return { id: profile.dataset.profileId, name: profile.querySelector('.utg-profile-name-input').value };
@@ -85,6 +92,7 @@
             clone.querySelector('.utg-profile-id').value = id;
             clone.querySelector('.utg-profile-name-input').value = name;
             container.append(clone);
+            clone.querySelectorAll('.utg-message-field textarea').forEach(resizeMessage);
             updateChoices();
             return clone;
         }
@@ -114,6 +122,8 @@
         container.addEventListener('input', function (event) {
             if (event.target.matches('.utg-profile-name-input')) {
                 updateChoices();
+            } else if (event.target.matches('.utg-message-field textarea')) {
+                resizeMessage(event.target);
             }
         });
         container.addEventListener('click', function (event) {
@@ -140,6 +150,7 @@
                     field.value = field.tagName === 'SELECT' ? '' : '';
                 });
                 rows.append(clone);
+                resizeMessage(clone.querySelector('.utg-message-field textarea'));
                 clone.querySelector('input[type="time"]').focus();
                 updateChoices();
             } else if (event.target.closest('.utg-remove-interval')) {

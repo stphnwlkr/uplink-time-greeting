@@ -1136,6 +1136,19 @@ class UplinkTimeGreeting {
             </section>
             <section class="tgb-panel utg-schedule-panel">
                 <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('REUSABLE DAILY SCHEDULES', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Hours and messages', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Each entry begins at its start time and continues until the next entry, even across midnight. Mark an opening to count down to it from another day.', 'uplink-time-greeting'); ?></p></div></div>
+                <div class="utg-token-guide" role="note" aria-labelledby="utg-token-guide-title">
+                    <div class="utg-token-guide-heading"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span><div><h3 id="utg-token-guide-title"><?php esc_html_e('Write dynamic messages', 'uplink-time-greeting'); ?></h3><p><?php esc_html_e('Place these tokens in a message. They show the configured local time and upcoming schedule events.', 'uplink-time-greeting'); ?></p></div></div>
+                    <ul class="utg-token-list">
+                        <li><code>{time}</code><span><?php esc_html_e('Current time', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{tz}</code><span><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{countdown}</code><span><?php esc_html_e('Until next entry', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{next_label}</code><span><?php esc_html_e('Next entry label', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{next_time}</code><span><?php esc_html_e('Next entry time', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{opening_countdown}</code><span><?php esc_html_e('Until next opening', 'uplink-time-greeting'); ?></span></li>
+                        <li><code>{opening_time}</code><span><?php esc_html_e('Next opening time', 'uplink-time-greeting'); ?></span></li>
+                    </ul>
+                    <p class="utg-token-example"><strong><?php esc_html_e('Example', 'uplink-time-greeting'); ?></strong> <span><?php esc_html_e('It’s {time}. We open in {opening_countdown}.', 'uplink-time-greeting'); ?></span></p>
+                </div>
                 <div class="utg-profiles">
                     <?php foreach ($settings['profiles'] as $profile_index => $profile) : ?>
                     <div class="utg-profile" data-profile-id="<?php echo esc_attr($profile['id']); ?>">
@@ -1154,7 +1167,6 @@ class UplinkTimeGreeting {
                     <?php endforeach; ?>
                 </div>
                 <button type="button" class="button utg-add-profile"><?php esc_html_e('Add reusable schedule', 'uplink-time-greeting'); ?></button>
-                <p class="tgb-note"><?php esc_html_e('Message tokens: {time}, {tz}, {countdown} to the next entry, {next_label}, {next_time}, {opening_countdown}, and {opening_time}. Example: It’s {time}. We open in {countdown}.', 'uplink-time-greeting'); ?></p>
             </section>
             <section class="tgb-panel utg-overview-panel">
                 <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('LOCAL TIME', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('The schedule uses this timezone unless a block or shortcode provides its own.', 'uplink-time-greeting'); ?></p></div></div>
@@ -1196,7 +1208,7 @@ class UplinkTimeGreeting {
             <label><?php esc_html_e('Label', 'uplink-time-greeting'); ?><input type="text" name="<?php echo esc_attr($name . '[label]'); ?>" value="<?php echo esc_attr($interval['label']); ?>" maxlength="80" placeholder="<?php esc_attr_e('Optional', 'uplink-time-greeting'); ?>"></label>
             <label><?php esc_html_e('Event', 'uplink-time-greeting'); ?><select name="<?php echo esc_attr($name . '[event]'); ?>"><option value="" <?php selected($interval['event'], ''); ?>><?php esc_html_e('None', 'uplink-time-greeting'); ?></option><option value="opening" <?php selected($interval['event'], 'opening'); ?>><?php esc_html_e('Opening', 'uplink-time-greeting'); ?></option><option value="closing" <?php selected($interval['event'], 'closing'); ?>><?php esc_html_e('Closing', 'uplink-time-greeting'); ?></option></select></label>
             <label class="utg-message-field"><?php esc_html_e('Message', 'uplink-time-greeting'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2"><?php echo esc_textarea($interval['message']); ?></textarea></label>
-            <button type="button" class="button utg-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-time-greeting'); ?>">&times;</button>
+            <button type="button" class="button utg-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-time-greeting'); ?>" title="<?php esc_attr_e('Remove time entry', 'uplink-time-greeting'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
         </div>
         <?php
     }
