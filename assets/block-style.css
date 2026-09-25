@@ -1,0 +1,17 @@
+.wp-block-time-greeting-block-time-greeting {
+    --tgb-greeting-font-weight: 500;
+    --tgb-date-font-style: normal;
+    line-height: inherit;
+}
+
+.wp-block-time-greeting-block-time-greeting .time-greeting {
+    font-weight: var(--tgb-greeting-font-weight);
+}
+
+.wp-block-time-greeting-block-time-greeting .time-greeting-date {
+    font-style: var(--tgb-date-font-style);
+}
+
+.wp-block-time-greeting-block-time-greeting.has-text-align-left { text-align: left; }
+.wp-block-time-greeting-block-time-greeting.has-text-align-center { text-align: center; }
+.wp-block-time-greeting-block-time-greeting.has-text-align-right { text-align: right; }

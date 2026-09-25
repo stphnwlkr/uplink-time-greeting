@@ -1,0 +1,82 @@
+/**
+ * Editor styles for Uplink Time Greeting
+ */
+
+.wp-block-time-greeting-block-time-greeting {
+    /* Editor-specific styles */
+}
+
+.wp-block-time-greeting-block-time-greeting .components-placeholder {
+    min-height: 60px;
+}
+
+.wp-block-time-greeting-block-time-greeting .components-placeholder .components-placeholder__label {
+    margin-bottom: 8px;
+}
+
+/* Preview styling in editor */
+.wp-block-time-greeting-block-time-greeting .time-greeting,
+.wp-block-time-greeting-block-time-greeting .time-greeting-date {
+    display: inline-block;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.wp-block-time-greeting-block-time-greeting .time-greeting {
+    font-weight: 500;
+    margin-right: 0.5em;
+}
+
+.wp-block-time-greeting-block-time-greeting .time-greeting-date {
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* Alignment support */
+.wp-block-time-greeting-block-time-greeting.has-text-align-left {
+    text-align: left;
+}
+
+.wp-block-time-greeting-block-time-greeting.has-text-align-center {
+    text-align: center;
+}
+
+.wp-block-time-greeting-block-time-greeting.has-text-align-right {
+    text-align: right;
+}
+
+/* Inspector controls styling */
+.block-editor-block-inspector .components-panel__body .components-base-control__help {
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 4px;
+    color: #757575;
+}
+
+/* Server side render loading state */
+.wp-block-time-greeting-block-time-greeting .components-placeholder {
+    background: #f0f0f0;
+    border: 1px dashed #ddd;
+    border-radius: 4px;
+}
+
+.wp-block-time-greeting-block-time-greeting .components-placeholder .dashicon {
+    color: #8f98a1;
+}
+
+/* Make sure the preview looks good in the editor */
+.wp-block-time-greeting-block-time-greeting [data-wp-c16t] {
+    opacity: 1;
+}
+
+/* Better spacing in editor panels */
+.components-panel__body .components-base-control + .components-base-control {
+    margin-top: 16px;
+}
+
+.components-panel__body hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 16px 0;
+}
