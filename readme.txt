@@ -1,4 +1,4 @@
-=== Uplink Time Greeting ===
+=== Uplink Business Hours & Greetings ===
 Contributors: stphnwlkr
 Tags: business hours, countdown, greeting, bricks, etch
 Requires at least: 6.0
@@ -22,11 +22,11 @@ Existing Time Greeting Block content keeps working after you deactivate that plu
 
 == Installation ==
 
-1. Upload and activate Uplink Time Greeting.
-2. Open Settings > Uplink Time Greeting > Weekly schedule to assign daily schedules and write messages. Expand a day to assign or customize its schedule.
+1. Upload and activate Uplink Business Hours & Greetings.
+2. Open Settings > Uplink Business Hours & Greetings > Weekly schedule to assign daily schedules and write messages. Expand a day to assign or customize its schedule.
 3. Add the block, a builder dynamic tag, or a shortcode to a page.
 
-If you are moving from Time Greeting Block, deactivate it before activating Uplink Time Greeting.
+If you are moving from Time Greeting Block, deactivate it before activating Uplink Business Hours & Greetings.
 
 == Frequently Asked Questions ==
 

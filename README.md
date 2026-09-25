@@ -1,10 +1,10 @@
-# Uplink Time Greeting
+# Uplink Business Hours & Greetings
 
 A seven-day business schedule, greeting, countdown, and local date for WordPress, Bricks, Etch, and shortcodes. Version **1.0.0**.
 
 ## Set up a week
 
-Open **Settings → Uplink Time Greeting → Weekly schedule**. Create a daily schedule once and assign it to several days. Expand each day to choose its schedule. For example, one schedule can cover Monday–Friday, while another covers the weekend. **Customize this day** copies a shared schedule so its hours and messages can change independently.
+Open **Settings → Uplink Business Hours & Greetings → Weekly schedule**. Create a daily schedule once and assign it to several days. Expand each day to choose its schedule. For example, one schedule can cover Monday–Friday, while another covers the weekend. **Customize this day** copies a shared schedule so its hours and messages can change independently.
 
 Each schedule has time entries with a start time, optional label, message, and optional Opening or Closing event. The active message continues until the next entry, including across midnight. To show a pre-opening message, add a 5:00 AM entry with `It's {time}. We open in {countdown}.` and a 7:00 AM entry marked **Opening**. Use `{opening_countdown}` when the next opening is farther away than the next entry, including after a closed weekend.
 
@@ -12,7 +12,7 @@ Message tokens: `{time}`, `{tz}`, `{countdown}`, `{next_label}`, `{next_time}`, 
 
 | Editor | Insert |
 | --- | --- |
-| WordPress block editor | **Uplink Time Greeting** block; choose Greeting, Date, or Both. |
+| WordPress block editor | **Uplink Business Hours & Greetings** block; choose Greeting, Date, or Both. |
 | Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{utg_day}` and `{utg_hours}` in child elements. A Shortcode element with `[time_greeting display="schedule"]` provides ready-made semantic markup. `{tgb_schedule}` remains available as inline plain text. |
 | Etch | Loop over `options.time_greeting.week` to build a schedule with your own HTML and classes. Inline text remains available as `{options.time_greeting.schedule}`. |
 | Shortcode | `[time_greeting]`, `[time_greeting display="date"]`, `[time_greeting display="both"]`, or `[time_greeting display="schedule"]`. |
