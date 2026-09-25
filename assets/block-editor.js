@@ -21,7 +21,7 @@
 
     // Common timezone options
     const timezoneOptions = [
-        { label: __('Use Site Default', 'uplink-time-greeting'), value: '' },
+        { label: __('Use WordPress site timezone', 'uplink-time-greeting'), value: '' },
         { label: __('America/New_York (ET)', 'uplink-time-greeting'), value: 'America/New_York' },
         { label: __('America/Chicago (CT)', 'uplink-time-greeting'), value: 'America/Chicago' },
         { label: __('America/Denver (MT)', 'uplink-time-greeting'), value: 'America/Denver' },
@@ -154,7 +154,7 @@
                         value: (customTimezone || needsCustomTimezone) ? 'custom' : timezone,
                         options: timezoneOptions,
                         onChange: handleTimezoneChange,
-                        help: __('Leave empty to use the site default timezone.', 'uplink-time-greeting')
+                        help: __('Follows the timezone in WordPress Settings → General unless an override is selected.', 'uplink-time-greeting')
                     }),
 
                     // Custom timezone field

@@ -28,6 +28,20 @@
         scheduleDismiss();
     }
 
+    function initPermissionSearch() {
+        const search = document.querySelector('.utg-user-search');
+        if (!search) {
+            return;
+        }
+        const choices = Array.from(document.querySelectorAll('.utg-user-choice'));
+        search.addEventListener('input', function () {
+            const term = search.value.trim().toLocaleLowerCase();
+            choices.forEach(function (choice) {
+                choice.hidden = !choice.textContent.toLocaleLowerCase().includes(term);
+            });
+        });
+    }
+
     function initScheduler() {
         const container = document.querySelector('.utg-profiles');
         if (!container) {
@@ -210,9 +224,10 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initToast(); initScheduler(); initPreview(); });
+        document.addEventListener('DOMContentLoaded', function () { initToast(); initPermissionSearch(); initScheduler(); initPreview(); });
     } else {
         initToast();
+        initPermissionSearch();
         initScheduler();
         initPreview();
     }

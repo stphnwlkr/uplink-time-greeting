@@ -23,6 +23,21 @@
 .tgb-tabs a:hover,.tgb-tabs a:focus{color:#183f58;background:#f1f5f7}
 .tgb-tabs a.is-active{color:#1b4056;background:#e9eff2}
 .tgb-tab-content{margin-top:22px}
+.utg-permission-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.utg-permission-group{min-width:0;margin:0;padding:0;border:0}
+.utg-permission-group legend{padding:0;color:#1d3146;font-size:17px;font-weight:700}
+.utg-permission-group>p{margin:7px 0 16px}
+.utg-permission-list{max-height:360px;overflow:auto;border:1px solid #dfe7ec;border-radius:10px;background:#fafcfd}
+.utg-permission-choice{display:flex;align-items:center;gap:11px;min-height:48px;margin:0;padding:10px 14px;border-bottom:1px solid #e8edf0;color:#26384a;font-weight:600;cursor:pointer}
+.utg-permission-choice:last-child{border-bottom:0}
+.utg-permission-choice:hover{background:#f0f6f9}
+.utg-user-choice[hidden]{display:none}
+.utg-permission-choice input{flex:none;margin:0}
+.utg-permission-choice small{display:block;margin-top:2px;color:#66798a;font-size:12px;font-weight:400}
+.utg-permission-fixed{justify-content:space-between;background:#eef5f8;cursor:default}
+.utg-permission-fixed span:last-child{color:#50718a;font-size:12px}
+.utg-user-search-label{display:block;margin:0 0 6px;color:#2e4254;font-weight:600}
+.tgb-admin .utg-user-search{width:100%;height:var(--utg-control-height);margin:0 0 10px;padding:8px 11px;border:1px solid #cbd7de;border-radius:8px;background:#fff;color:#233649;font:inherit}
 .tgb-panel{margin:0 0 20px;padding:27px 30px;border:1px solid #e0e6e9;border-radius:16px;background:#fff;box-shadow:0 3px 16px rgba(27,47,62,.05)}
 .tgb-panel-heading{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #edf0f2}
 .tgb-overline{margin:0 0 8px;color:#50718a;font-size:11px;font-weight:700;letter-spacing:.13em}
@@ -117,7 +132,7 @@
 .tgb-css-example{padding:18px;border:1px solid #dfe7ec;border-radius:9px;background:#f7fafb;overflow-x:auto}
 .tgb-css-example code{display:block;margin:0;padding:0;background:none;white-space:pre}
 @media(max-width:1100px){.utg-week-grid{grid-template-columns:1fr}.utg-interval-row{grid-template-columns:minmax(130px,1fr) minmax(145px,1.5fr) minmax(120px,1fr) 34px}.utg-message-field{grid-column:1/-2}}
-@media(max-width:782px){.tgb-period-grid,.tgb-default-fields,.tgb-usage-grid,.tgb-example-grid{grid-template-columns:1fr}.tgb-admin-header{padding:25px;align-items:flex-start}.tgb-version{display:none}.utg-interval-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.utg-interval-row label:nth-child(3){grid-column:1/2}.utg-message-field{grid-column:2/3}.utg-interval-row .utg-remove-interval{grid-column:3;grid-row:2}.utg-day-controls{grid-template-columns:1fr}.utg-day-row .button{grid-column:auto}.utg-preview-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.utg-preview-button,.utg-preview-status{grid-column:1/-1}}
+@media(max-width:782px){.tgb-period-grid,.tgb-default-fields,.tgb-usage-grid,.tgb-example-grid,.utg-permission-grid{grid-template-columns:1fr}.tgb-admin-header{padding:25px;align-items:flex-start}.tgb-version{display:none}.utg-interval-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.utg-interval-row label:nth-child(3){grid-column:1/2}.utg-message-field{grid-column:2/3}.utg-interval-row .utg-remove-interval{grid-column:3;grid-row:2}.utg-day-controls{grid-template-columns:1fr}.utg-day-row .button{grid-column:auto}.utg-preview-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.utg-preview-button,.utg-preview-status{grid-column:1/-1}}
 @media(max-width:550px){.tgb-admin{margin-right:10px}.tgb-admin-header{gap:15px}.tgb-header-icon{width:52px;height:52px}.tgb-header-icon img{width:39px;height:35px}.tgb-admin-header h1{font-size:25px}.tgb-panel{padding:20px}.tgb-tabs a{flex:1;text-align:center}.utg-profile{padding:14px}.utg-interval-row{grid-template-columns:minmax(0,1fr) 34px}.utg-interval-row label,.utg-interval-row label:nth-child(3),.utg-message-field{grid-column:1;grid-row:auto}.utg-interval-row .utg-remove-interval{grid-column:2;grid-row:1}.utg-profile-heading{align-items:stretch;flex-direction:column}.utg-profile-name{width:100%}}
 @media(max-width:782px){.tgb-toast{top:60px;right:16px}}
 @media(prefers-reduced-motion:reduce){.tgb-toast{transition:none}}

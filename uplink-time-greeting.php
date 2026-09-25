@@ -22,6 +22,7 @@ define('TGB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('TGB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('TGB_PLUGIN_VERSION', '1.0.0');
 define('TGB_OPTION_NAME', 'utg_settings');
+define('TGB_PERMISSIONS_OPTION', 'utg_permissions');
 
 /**
  * Main plugin class
@@ -41,6 +42,8 @@ class UplinkTimeGreeting {
         add_action('init', array($this, 'init'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'admin_init'));
+        add_filter('map_meta_cap', array($this, 'map_settings_capability'), 10, 4);
+        add_filter('option_page_capability_tgb_settings_group', array($this, 'settings_capability'));
         add_filter('etch/dynamic_data/option', array($this, 'etch_data'));
         add_filter('bricks/dynamic_tags_list', array($this, 'bricks_tags'));
         add_filter('bricks/setup/control_options', array($this, 'bricks_query_options'));
@@ -67,6 +70,16 @@ class UplinkTimeGreeting {
      * Initialize plugin
      */
     public function init() {
+        // Pre-release builds saved a timezone without recording whether it was
+        // chosen or copied on activation. Move those installs to the live site default.
+        $stored_settings = get_option(TGB_OPTION_NAME, false);
+        if (is_array($stored_settings) && empty($stored_settings['timezone_wp_default_migrated'])) {
+            $stored_settings['default_timezone'] = '';
+            unset($stored_settings['timezone_default_migrated']);
+            $stored_settings['timezone_wp_default_migrated'] = true;
+            update_option(TGB_OPTION_NAME, $stored_settings);
+        }
+
         wp_register_script('tgb-editor', TGB_PLUGIN_URL . 'assets/block-editor.js', array(
             'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'
         ), TGB_PLUGIN_VERSION, true);
@@ -89,8 +102,9 @@ class UplinkTimeGreeting {
             'week' => $this->default_week(),
             'date_intro' => __('Today is', 'uplink-time-greeting'),
             'date_only_intro' => true,
-            'default_timezone' => wp_timezone_string(),
+            'default_timezone' => '',
             'default_tz_abbr' => '',
+            'timezone_wp_default_migrated' => true,
             'plugin_version' => TGB_PLUGIN_VERSION,
             'activation_date' => current_time('mysql')
         );
@@ -140,6 +154,7 @@ class UplinkTimeGreeting {
      */
     public static function uninstall() {
         delete_option(TGB_OPTION_NAME);
+        delete_option(TGB_PERMISSIONS_OPTION);
     }
 
     /**
@@ -151,7 +166,7 @@ class UplinkTimeGreeting {
             'week' => $this->default_week(),
             'date_intro' => __('Today is', 'uplink-time-greeting'),
             'date_only_intro' => true,
-            'default_timezone' => wp_timezone_string(),
+            'default_timezone' => '',
             'default_tz_abbr' => ''
         );
 
@@ -322,7 +337,7 @@ class UplinkTimeGreeting {
         // Set defaults from settings
         $display = $attributes['display'] ?? 'greeting';
         $date_format = $attributes['dateFormat'] ?? 'F j, Y';
-        $timezone = !empty($attributes['timezone']) ? $attributes['timezone'] : $settings['default_timezone'];
+        $timezone = !empty($attributes['timezone']) ? $attributes['timezone'] : ($settings['default_timezone'] ?: wp_timezone_string());
         $tz_abbr_override = !empty($attributes['tzAbbr']) ? $attributes['tzAbbr'] : '';
         $tz_abbr = $tz_abbr_override ?: $settings['default_tz_abbr'];
 
@@ -346,12 +361,12 @@ class UplinkTimeGreeting {
         } catch (Exception $e) {
             // Fallback to default timezone if there's an error
             try {
-                $datetime = new DateTime('now', new DateTimeZone($settings['default_timezone']));
-                $timezone = $settings['default_timezone'];
+                $timezone = $settings['default_timezone'] ?: wp_timezone_string();
+                $datetime = new DateTime('now', new DateTimeZone($timezone));
             } catch (Exception $e2) {
-                // Final fallback to server timezone
-                $datetime = new DateTime();
-                $timezone = date_default_timezone_get();
+                // Final fallback to the WordPress site timezone.
+                $datetime = new DateTime('now', wp_timezone());
+                $timezone = wp_timezone_string();
             }
         }
         if (!empty($attributes['previewAt'])) {
@@ -840,7 +855,7 @@ class UplinkTimeGreeting {
             'timezone' => sanitize_text_field($request->get_param('timezone') ?: ''),
             'tzAbbr' => sanitize_text_field($request->get_param('tz_abbr') ?: ''),
         );
-        if (current_user_can('manage_options') && $request->get_param('at')) {
+        if (current_user_can('utg_manage_settings') && $request->get_param('at')) {
             $attributes['previewAt'] = sanitize_text_field($request->get_param('at'));
         }
         return rest_ensure_response(array('html' => $this->generate_greeting($attributes)));
@@ -855,7 +870,7 @@ class UplinkTimeGreeting {
 
         $remaining = array();
         foreach (get_settings_errors() as $feedback) {
-            if (TGB_OPTION_NAME === $feedback['setting'] ||
+            if (TGB_OPTION_NAME === $feedback['setting'] || TGB_PERMISSIONS_OPTION === $feedback['setting'] ||
                 ('general' === $feedback['setting'] && 'settings_updated' === $feedback['code'])) {
                 $this->admin_feedback[] = $feedback;
             } else {
@@ -872,7 +887,7 @@ class UplinkTimeGreeting {
         add_options_page(
             __('Uplink Hours & Greetings Settings', 'uplink-time-greeting'),
             __('Uplink Hours & Greetings', 'uplink-time-greeting'),
-            'manage_options',
+            'utg_manage_settings',
             'time-greeting-settings',
             array($this, 'admin_page')
         );
@@ -886,6 +901,50 @@ class UplinkTimeGreeting {
             'tgb_settings_group',
             TGB_OPTION_NAME,
             array($this, 'sanitize_settings')
+        );
+        register_setting(
+            'tgb_permissions_group',
+            TGB_PERMISSIONS_OPTION,
+            array($this, 'sanitize_permissions')
+        );
+    }
+
+    public function settings_capability() {
+        return 'utg_manage_settings';
+    }
+
+    /** Administrators and the selected roles or users may edit plugin settings. */
+    public function map_settings_capability($caps, $cap, $user_id, $args) {
+        if ('utg_manage_settings' !== $cap) {
+            return $caps;
+        }
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return array('do_not_allow');
+        }
+        if (user_can($user, 'manage_options')) {
+            return array('exist');
+        }
+        $permissions = get_option(TGB_PERMISSIONS_OPTION, array());
+        $roles = is_array($permissions) ? ($permissions['roles'] ?? array()) : array();
+        $users = is_array($permissions) ? ($permissions['users'] ?? array()) : array();
+        if (in_array((int) $user_id, array_map('intval', (array) $users), true) || array_intersect((array) $user->roles, (array) $roles)) {
+            return array('exist');
+        }
+        return array('do_not_allow');
+    }
+
+    public function sanitize_permissions($input) {
+        if (!current_user_can('manage_options')) {
+            return get_option(TGB_PERMISSIONS_OPTION, array());
+        }
+        $input = is_array($input) ? $input : array();
+        $available_roles = array_keys(wp_roles()->roles);
+        $roles = isset($input['roles']) && is_array($input['roles']) ? $input['roles'] : array();
+        $users = isset($input['users']) && is_array($input['users']) ? $input['users'] : array();
+        return array(
+            'roles' => array_values(array_intersect($available_roles, array_map('sanitize_key', $roles))),
+            'users' => array_values(array_unique(array_filter(array_map('absint', $users), 'get_userdata'))),
         );
     }
 
@@ -904,6 +963,7 @@ class UplinkTimeGreeting {
         $sanitized['plugin_version'] = TGB_PLUGIN_VERSION;
         $sanitized['activation_date'] = $current_settings['activation_date'] ?? current_time('mysql');
         $sanitized['last_updated'] = current_time('mysql');
+        $sanitized['timezone_wp_default_migrated'] = true;
 
         $raw_profiles = isset($input['profiles']) && is_array($input['profiles']) ? $input['profiles'] : array();
         $profiles = array();
@@ -966,13 +1026,15 @@ class UplinkTimeGreeting {
         $sanitized['date_intro'] = sanitize_text_field(wp_unslash($input['date_intro'] ?? $defaults['date_intro']));
         $sanitized['date_only_intro'] = !empty($input['date_only_intro']);
 
-        // Validate timezone
-        try {
-            new DateTimeZone($sanitized['default_timezone']);
-        } catch (Exception $error) {
-            add_settings_error(TGB_OPTION_NAME, 'default_timezone',
-                __('Invalid timezone identifier.', 'uplink-time-greeting'));
-            $sanitized['default_timezone'] = $current_settings['default_timezone'] ?? wp_timezone_string();
+        // An empty value follows the WordPress timezone setting.
+        if ('' !== $sanitized['default_timezone']) {
+            try {
+                new DateTimeZone($sanitized['default_timezone']);
+            } catch (Exception $error) {
+                add_settings_error(TGB_OPTION_NAME, 'default_timezone',
+                    __('Invalid timezone identifier.', 'uplink-time-greeting'));
+                $sanitized['default_timezone'] = $current_settings['default_timezone'] ?? '';
+            }
         }
 
         return $sanitized;
@@ -997,7 +1059,14 @@ class UplinkTimeGreeting {
 
         printf('<select id="%1$s" name="%2$s[%1$s]">', esc_attr($args['field']), esc_attr(TGB_OPTION_NAME));
 
-        if (!in_array($current_value, $timezones, true)) {
+        printf(
+            '<option value=""%1$s>%2$s</option>',
+            selected($current_value, '', false),
+            /* translators: %s: timezone selected in WordPress Settings > General. */
+            esc_html(sprintf(__('WordPress site timezone (%s)', 'uplink-time-greeting'), wp_timezone_string()))
+        );
+
+        if ('' !== $current_value && !in_array($current_value, $timezones, true)) {
             printf('<option value="%1$s" selected>%1$s</option>', esc_attr($current_value));
         }
 
@@ -1016,7 +1085,7 @@ class UplinkTimeGreeting {
      * Admin page with tabbed interface
      */
     public function admin_page() {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('utg_manage_settings')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'uplink-time-greeting'));
         }
 
@@ -1026,8 +1095,11 @@ class UplinkTimeGreeting {
         if ('settings' === $current_tab) {
             $current_tab = 'overview';
         }
-        if (!in_array($current_tab, array('overview', 'schedule', 'usage', 'styling'), true)) {
+        if (!in_array($current_tab, array('overview', 'schedule', 'usage', 'styling', 'permissions'), true)) {
             $current_tab = 'overview';
+        }
+        if ('permissions' === $current_tab && !current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'uplink-time-greeting'));
         }
 
         ?>
@@ -1077,6 +1149,12 @@ class UplinkTimeGreeting {
                    class="<?php echo $current_tab === 'styling' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'styling' ? 'aria-current="page"' : ''; ?>>
                     <?php esc_html_e('Appearance', 'uplink-time-greeting'); ?>
                 </a>
+                <?php if (current_user_can('manage_options')) : ?>
+                <a href="<?php echo esc_url(add_query_arg('tab', 'permissions', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
+                   class="<?php echo $current_tab === 'permissions' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'permissions' ? 'aria-current="page"' : ''; ?>>
+                    <?php esc_html_e('Permissions', 'uplink-time-greeting'); ?>
+                </a>
+                <?php endif; ?>
             </nav>
 
             <div class="tgb-tab-content">
@@ -1086,6 +1164,8 @@ class UplinkTimeGreeting {
                     <?php $this->render_usage_tab(); ?>
                 <?php elseif ($current_tab === 'styling'): ?>
                     <?php $this->render_styling_tab(); ?>
+                <?php elseif ($current_tab === 'permissions'): ?>
+                    <?php $this->render_permissions_tab(); ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -1097,7 +1177,7 @@ class UplinkTimeGreeting {
     private function render_settings_tab($current_tab) {
         $settings = $this->get_settings();
         try {
-            $preview_now = new DateTime('now', new DateTimeZone($settings['default_timezone']));
+            $preview_now = new DateTime('now', new DateTimeZone($settings['default_timezone'] ?: wp_timezone_string()));
         } catch (Exception $error) {
             $preview_now = new DateTime('now', wp_timezone());
         }
@@ -1169,7 +1249,7 @@ class UplinkTimeGreeting {
                 <button type="button" class="button utg-add-profile"><?php esc_html_e('Add reusable schedule', 'uplink-time-greeting'); ?></button>
             </section>
             <section class="tgb-panel utg-overview-panel">
-                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('LOCAL TIME', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('The schedule uses this timezone unless a block or shortcode provides its own.', 'uplink-time-greeting'); ?></p></div></div>
+                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('LOCAL TIME', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Uses the WordPress site timezone by default. Choose another timezone only when needed.', 'uplink-time-greeting'); ?></p></div></div>
                 <div class="tgb-default-fields">
                     <div class="tgb-field"><label for="default_timezone"><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></label><?php $this->timezone_field_callback(array('field' => 'default_timezone')); ?></div>
                     <div class="tgb-field"><label for="default_tz_abbr"><?php esc_html_e('Timezone label (optional)', 'uplink-time-greeting'); ?></label><?php $this->text_field_callback(array('field' => 'default_tz_abbr')); ?><p><?php esc_html_e('Leave blank to use the timezone’s current abbreviation.', 'uplink-time-greeting'); ?></p></div>
@@ -1210,6 +1290,47 @@ class UplinkTimeGreeting {
             <label class="utg-message-field"><?php esc_html_e('Message', 'uplink-time-greeting'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2"><?php echo esc_textarea($interval['message']); ?></textarea></label>
             <button type="button" class="button utg-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-time-greeting'); ?>" title="<?php esc_attr_e('Remove time entry', 'uplink-time-greeting'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
         </div>
+        <?php
+    }
+
+    /** Administrator-only access controls for changing plugin settings. */
+    private function render_permissions_tab() {
+        $permissions = get_option(TGB_PERMISSIONS_OPTION, array());
+        $selected_roles = is_array($permissions) ? ($permissions['roles'] ?? array()) : array();
+        $selected_users = is_array($permissions) ? ($permissions['users'] ?? array()) : array();
+        $users = get_users(array('orderby' => 'display_name', 'order' => 'ASC'));
+        ?>
+        <form method="post" action="options.php" class="utg-permissions-form">
+            <?php settings_fields('tgb_permissions_group'); ?>
+            <input type="hidden" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[_submitted]" value="1">
+            <section class="tgb-panel">
+                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('ACCESS CONTROL', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Who can update settings', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Administrators always have access. You can also allow entire roles or specific users to edit the schedule and other plugin settings.', 'uplink-time-greeting'); ?></p></div></div>
+                <div class="utg-permission-grid">
+                    <fieldset class="utg-permission-group">
+                        <legend><?php esc_html_e('Roles', 'uplink-time-greeting'); ?></legend>
+                        <p><?php esc_html_e('Everyone with a selected role can update plugin settings.', 'uplink-time-greeting'); ?></p>
+                        <div class="utg-permission-list">
+                            <div class="utg-permission-choice utg-permission-fixed"><span><?php esc_html_e('Administrator', 'uplink-time-greeting'); ?></span><span><?php esc_html_e('Always allowed', 'uplink-time-greeting'); ?></span></div>
+                            <?php foreach (wp_roles()->roles as $role_key => $role) : if ('administrator' === $role_key) { continue; } ?>
+                                <label class="utg-permission-choice"><input type="checkbox" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[roles][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, (array) $selected_roles, true)); ?>><span><?php echo esc_html(translate_user_role($role['name'])); ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
+                    </fieldset>
+                    <fieldset class="utg-permission-group">
+                        <legend><?php esc_html_e('Individual users', 'uplink-time-greeting'); ?></legend>
+                        <p><?php esc_html_e('Grant access to a user without changing their role.', 'uplink-time-greeting'); ?></p>
+                        <label class="utg-user-search-label" for="utg-user-search"><?php esc_html_e('Find a user', 'uplink-time-greeting'); ?></label>
+                        <input type="search" id="utg-user-search" class="utg-user-search" placeholder="<?php esc_attr_e('Search by name or username', 'uplink-time-greeting'); ?>">
+                        <div class="utg-permission-list utg-user-list">
+                            <?php foreach ($users as $user) : if (user_can($user, 'manage_options')) { continue; } ?>
+                                <label class="utg-permission-choice utg-user-choice"><input type="checkbox" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[users][]" value="<?php echo esc_attr($user->ID); ?>" <?php checked(in_array((int) $user->ID, array_map('intval', (array) $selected_users), true)); ?>><span><?php echo esc_html($user->display_name); ?><small><?php echo esc_html($user->user_login); ?></small></span></label>
+                            <?php endforeach; ?>
+                        </div>
+                    </fieldset>
+                </div>
+            </section>
+            <div class="tgb-save-row"><?php submit_button(__('Save permissions', 'uplink-time-greeting'), 'primary', 'submit', false); ?></div>
+        </form>
         <?php
     }
 

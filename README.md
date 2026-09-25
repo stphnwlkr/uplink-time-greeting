@@ -8,7 +8,9 @@ Open **Settings → Uplink Hours & Greetings → Weekly schedule**. Create a dai
 
 Each schedule has time entries with a start time, optional label, message, and optional Opening or Closing event. The active message continues until the next entry, including across midnight. To show a pre-opening message, add a 5:00 AM entry with `It's {time}. We open in {countdown}.` and a 7:00 AM entry marked **Opening**. Use `{opening_countdown}` when the next opening is farther away than the next entry, including after a closed weekend.
 
-Message tokens: `{time}`, `{tz}`, `{countdown}`, `{next_label}`, `{next_time}`, `{opening_countdown}`, `{opening_time}`. Date introduction and timezone are separately configurable.
+Message tokens: `{time}`, `{tz}`, `{countdown}`, `{next_label}`, `{next_time}`, `{opening_countdown}`, `{opening_time}`. The timezone follows WordPress Settings → General by default; an override and date introduction are separately configurable.
+
+Administrators can use the **Permissions** tab to allow additional roles or individual users to update plugin settings. Administrators always retain access.
 
 | Editor | Insert |
 | --- | --- |

@@ -16,7 +16,9 @@ Build reusable daily schedules with up to 24 time entries each. Assign the same 
 
 Use {time} and {tz} in messages, or {countdown} for time until the next entry. {next_label} and {next_time} describe that entry. Mark an entry as Opening to use {opening_countdown} and {opening_time}, even when the next opening is on another day. Example: a 5:00 AM message can say "It's {time}. We open in {countdown}." before a 7:00 AM Opening entry.
 
-The WordPress block and shortcode render semantic, styleable weekly hours and refresh at schedule changes. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements; its Shortcode element can show the ready-made markup. Etch receives an ordered week array for custom markup. Bricks dynamic tags and Etch text options resolve when the page renders; for a live countdown in either builder, use a shortcode-capable element. Weekly schedule output uses the site's Week Starts On setting. The plugin also offers editable date wording, a timezone setting, and output examples for greeting, date, both, and schedule.
+The WordPress block and shortcode render semantic, styleable weekly hours and refresh at schedule changes. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements; its Shortcode element can show the ready-made markup. Etch receives an ordered week array for custom markup. Bricks dynamic tags and Etch text options resolve when the page renders; for a live countdown in either builder, use a shortcode-capable element. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. The plugin also offers editable date wording and output examples for greeting, date, both, and schedule.
+
+Administrators can grant update access to additional roles or individual users in the Permissions tab. Administrator access is always retained.
 
 Existing Time Greeting Block content keeps working after you deactivate that plugin and activate this one. On first activation, this plugin copies its saved settings without removing the old data.
 
