@@ -6,7 +6,7 @@
     "title": "Uplink Time Greeting",
     "category": "widgets",
     "icon": "clock",
-    "description": "Display time-based greetings and current date with customizable periods.",
+    "description": "Display greetings, opening countdowns, and dates from a reusable seven-day schedule.",
     "keywords": ["time", "greeting", "date", "clock", "calendar"],
     "textdomain": "uplink-time-greeting",
     "supports": {
@@ -32,7 +32,7 @@
         "display": {
             "type": "string",
             "default": "greeting",
-            "enum": ["greeting", "date", "both"]
+            "enum": ["greeting", "date", "both", "schedule"]
         },
         "dateFormat": {
             "type": "string",

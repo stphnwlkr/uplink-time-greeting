@@ -15,3 +15,9 @@
 .wp-block-time-greeting-block-time-greeting.has-text-align-left { text-align: left; }
 .wp-block-time-greeting-block-time-greeting.has-text-align-center { text-align: center; }
 .wp-block-time-greeting-block-time-greeting.has-text-align-right { text-align: right; }
+
+.utg-schedule{margin:0;max-width:44rem}
+.utg-schedule-day{display:flex;justify-content:space-between;gap:1.5rem;padding:.55rem 0;border-bottom:1px solid currentColor}
+.utg-schedule-day dt{font-weight:600}
+.utg-schedule-day dd{margin:0;text-align:right}
+.utg-schedule-day.is-today dt{font-weight:800}

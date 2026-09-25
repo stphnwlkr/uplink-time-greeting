@@ -114,7 +114,8 @@
                         options: [
                             { label: __('Greeting Only', 'uplink-time-greeting'), value: 'greeting' },
                             { label: __('Date Only', 'uplink-time-greeting'), value: 'date' },
-                            { label: __('Both Greeting and Date', 'uplink-time-greeting'), value: 'both' }
+                            { label: __('Both Greeting and Date', 'uplink-time-greeting'), value: 'both' },
+                            { label: __('Weekly Schedule', 'uplink-time-greeting'), value: 'schedule' }
                         ],
                         onChange: (value) => setAttributes({ display: value }),
                         help: __('Choose what to display in your time greeting block.', 'uplink-time-greeting')
