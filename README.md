@@ -10,13 +10,13 @@ Each schedule has time entries with a start time, optional label, message, and o
 
 Message tokens: `{time}`, `{tz}`, `{countdown}`, `{next_label}`, `{next_time}`, `{opening_countdown}`, `{opening_time}`. The timezone follows WordPress Settings → General by default; an override and date introduction are separately configurable.
 
-Administrators can use the **Permissions** tab to allow additional roles or individual users to update plugin settings. Administrators always retain access.
+Administrators can use the **Permissions** tab to allow additional roles or individual users to update plugin settings. Administrators always retain access. The admin tabs switch in place, so schedule edits remain on the page while moving between sections. **How to Use** is the final tab and contains every editor integration plus appearance guidance.
 
 | Editor | Insert |
 | --- | --- |
 | WordPress block editor | **Uplink Hours & Greetings** block; choose Greeting, Date, or Both. |
 | Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{utg_day}` and `{utg_hours}` in child elements. A Shortcode element with `[time_greeting display="schedule"]` provides ready-made semantic markup. `{tgb_schedule}` remains available as inline plain text. |
-| Etch | Loop over `options.time_greeting.week` to build a schedule with your own HTML and classes. Inline text remains available as `{options.time_greeting.schedule}`. |
+| Etch | Loop over `options.time_greeting.week` to build a schedule with your own HTML and classes. Complete outputs, current and next entries, next opening, timezone, current clock, individual days, and machine-readable windows are available under `options.time_greeting`. |
 | Shortcode | `[time_greeting]`, `[time_greeting display="date"]`, `[time_greeting display="both"]`, or `[time_greeting display="schedule"]`. |
 | PHP | `time_greeting_echo( array( 'display' => 'both' ) );` |
 
@@ -26,7 +26,7 @@ The ready-made schedule uses a `<dl>` with one `<dt>` and `<dd>` pair per day. O
 
 For a custom Bricks design, add an outer Div with HTML tag `dl`, then a nested Div with Query Loop enabled and type **Uplink Weekly Schedule**. Give that repeating Div the HTML tag `div`; add child text elements with tags `dt` and `dd` and dynamic content `{utg_day}` and `{utg_hours}`. Style the row and children with Bricks controls. The loop follows WordPress's **Week Starts On** setting and returns all seven days, including closed days. `{utg_state}` returns `open`, `closed`, or `unset`; `{utg_key}` returns the English day key; `{utg_today}` returns `1` or `0`. These tags resolve only inside this schedule loop.
 
-Etch receives an ordered `week` array that follows WordPress's **Week Starts On** setting. Each day has `key`, `day`, `hours`, `state`, `is_today`, and `windows`. Each window has `start`, `start_label`, `end`, `end_label`, and `overnight`. Example:
+Etch receives an ordered `week` array that follows WordPress's **Week Starts On** setting. Each day has `key`, `number`, `day`, `hours`, `state`, `is_today`, and `windows`. Each window has `start`, `start_label`, `end`, `end_label`, and `overnight`. Direct paths include `greeting`, `date`, `both`, `schedule`, `timezone`, `timezone_abbr`, `now.*`, `current.*`, `next.*`, `opening.*`, and `days.monday` through `days.sunday`. Example:
 
 ```html
 <dl class="business-hours">

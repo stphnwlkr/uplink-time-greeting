@@ -1,64 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1544 500" role="img" aria-labelledby="title desc">
-  <title id="title">Uplink Hours &amp; Greetings</title>
-  <desc id="desc">Branded plugin banner with weekly business hours and a live countdown preview.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1544" y2="500" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#061d3d"/><stop offset=".58" stop-color="#082f61"/><stop offset="1" stop-color="#0068ad"/>
-    </linearGradient>
-    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#edf5fb"/></linearGradient>
-    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.5" fill="#5ec1ff" opacity=".45"/></pattern>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#00152f" flood-opacity=".45"/></filter>
-  </defs>
-  <rect width="1544" height="500" fill="url(#bg)"/>
-  <circle cx="1475" cy="90" r="310" fill="#0877bc" opacity=".24"/>
-  <circle cx="1475" cy="90" r="240" fill="none" stroke="#28a9ff" stroke-width="4" opacity=".55"/>
-  <rect x="1185" y="0" width="359" height="500" fill="url(#dots)" opacity=".9"/>
-  <path d="M0 411C235 360 403 480 657 423s389-44 574-6 243 42 313 25v58H0Z" fill="#07182f" opacity=".46"/>
-
-  <g transform="translate(64 55)">
-    <rect width="68" height="68" rx="17" fill="#f7fbff"/>
-    <g transform="translate(10 12) scale(.0325)">
-      <path d="M899.89 228.83h181.94c92.1 0 167.45 75.39 167.45 167.54s-75.39 167.54-167.45 167.54H864.3v228.83h217.56c217.89 0 396.14-178.34 396.14-396.37S1299.65 0 1081.86 0h-304.3c40.89 76.2 81.59 152.53 122.33 228.83Z" fill="#003362"/>
-      <path d="M563.62 387.93v404.78c0 92.08-75.32 167.54-167.45 167.54s-167.45-75.39-167.45-167.54V396.34H0v396.4c0 217.96 178.25 396.33 396.17 396.33s396.17-178.34 396.17-396.33V387.77c14.22 4.88 29.19 10.58 45.16 16.95 30.84 12.32 65.56-13.33 49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68 114.79-120.13 224.69-181.36 339.25-16.42 34.61 18.33 60.26 49.14 47.93 16.1-6.44 31.13-12.03 45.35-16.79Z" fill="#0071cc"/>
-    </g>
-    <text x="91" y="28" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700">Uplink Plugins</text>
-    <text x="91" y="50" fill="#a9d6f4" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="3">WORDPRESS TOOLS</text>
-  </g>
-
-  <g font-family="Arial, Helvetica, sans-serif">
-    <text x="64" y="196" fill="#91cfff" font-size="14" font-weight="700" letter-spacing="5">INTRODUCING</text>
-    <text x="64" y="260" fill="#fff" font-size="60" font-weight="750">Hours &amp; Greetings</text>
-    <rect x="65" y="287" width="158" height="7" rx="3.5" fill="#ffca3a"/>
-    <text x="64" y="340" fill="#dcecf8" font-size="25">Weekly hours, timed messages and live countdowns.</text>
-    <g transform="translate(64 384)" font-size="14" font-weight="700" fill="#d5e7f5">
-      <circle cx="7" cy="7" r="7" fill="#ffca3a"/><text x="24" y="12">WEEKLY SCHEDULES</text>
-      <circle cx="210" cy="7" r="7" fill="#65c3ff"/><text x="227" y="12">LOCAL TIME</text>
-      <circle cx="356" cy="7" r="7" fill="#8caeec"/><text x="373" y="12">COUNTDOWNS</text>
-    </g>
-  </g>
-
-  <g transform="translate(888 54)" filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
-    <rect x="20" y="18" width="572" height="392" rx="26" fill="#001a38" opacity=".52"/>
-    <rect width="572" height="392" rx="26" fill="url(#card)"/>
-    <rect x="18" y="18" width="536" height="62" rx="15" fill="#e3edf6"/>
-    <text x="40" y="47" fill="#173653" font-size="12" font-weight="800" letter-spacing="2.2">TODAY · FRIDAY</text>
-    <rect x="422" y="31" width="110" height="34" rx="17" fill="#d9f4e4"/>
-    <circle cx="443" cy="48" r="5" fill="#1e9b59"/>
-    <text x="457" y="53" fill="#147444" font-size="12" font-weight="800">OPEN NOW</text>
-    <text x="34" y="128" fill="#132c45" font-size="27" font-weight="750">Good afternoon!</text>
-    <text x="34" y="159" fill="#5d7286" font-size="17">We close in <tspan fill="#006fca" font-weight="800">2 hours</tspan>.</text>
-    <g transform="translate(34 192)">
-      <circle cx="38" cy="38" r="34" fill="#0a3968"/>
-      <circle cx="38" cy="38" r="26" fill="none" stroke="#fff" stroke-width="4"/>
-      <path d="M38 38V20M38 38l14 10" stroke="#ffca3a" stroke-width="5" stroke-linecap="round"/>
-      <text x="91" y="29" fill="#233d56" font-size="12" font-weight="800" letter-spacing="1.5">TODAY'S HOURS</text>
-      <text x="91" y="57" fill="#0b2f52" font-size="22" font-weight="750">9:00 AM – 6:00 PM</text>
-    </g>
-    <line x1="34" y1="278" x2="538" y2="278" stroke="#cbd9e4"/>
-    <g transform="translate(34 307)" font-size="13">
-      <text y="0" fill="#60758a" font-weight="700">MON–FRI</text><text x="122" y="0" fill="#213c55" font-weight="750">9 AM – 6 PM</text>
-      <text y="30" fill="#60758a" font-weight="700">SATURDAY</text><text x="122" y="30" fill="#213c55" font-weight="750">10 AM – 2 PM</text>
-      <text x="310" y="0" fill="#60758a" font-weight="700">SUNDAY</text><text x="416" y="0" fill="#9b5961" font-weight="750">CLOSED</text>
-    </g>
-  </g>
+  <title id="title">Uplink Hours &amp; Greetings</title><desc id="desc">Plugin banner showing the real output preview interface.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1544" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#061e40"/><stop offset="1" stop-color="#0a4780"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#00152f" flood-opacity=".38"/></filter><clipPath id="ui"><rect x="836" y="54" width="646" height="392" rx="18"/></clipPath></defs>
+  <rect width="1544" height="500" fill="url(#bg)"/><circle cx="1440" cy="55" r="300" fill="#0b69aa" opacity=".22"/>
+  <g transform="translate(64 48)"><rect width="66" height="66" rx="16" fill="#f8fbff"/><g transform="translate(10 12) scale(.031)"><path fill="#003362" d="M899.89 228.83h181.94c92.1 0 167.45 75.39 167.45 167.54s-75.39 167.54-167.45 167.54H864.3v228.83h217.56c217.89 0 396.14-178.34 396.14-396.37S1299.65 0 1081.86 0h-304.3c40.89 76.2 81.59 152.53 122.33 228.83Z"/><path fill="#0071cc" d="M563.62 387.93v404.78c0 92.08-75.32 167.54-167.45 167.54s-167.45-75.39-167.45-167.54V396.34H0v396.4c0 217.96 178.25 396.33 396.17 396.33s396.17-178.34 396.17-396.33V387.77c14.22 4.88 29.19 10.58 45.16 16.95 30.84 12.32 65.56-13.33 49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68 114.79-120.13 224.69-181.36 339.25-16.42 34.61 18.33 60.26 49.14 47.93 16.1-6.44 31.13-12.03 45.35-16.79Z"/></g><text x="88" y="28" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="700">Uplink Plugins</text><text x="88" y="49" fill="#add5f2" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" letter-spacing="3">WORDPRESS TOOLS</text></g>
+  <g font-family="Arial,Helvetica,sans-serif"><text x="64" y="183" fill="#9dd6fa" font-size="14" font-weight="700" letter-spacing="5">INTRODUCING</text><text x="64" y="249" fill="#fff" font-size="58" font-weight="750">Hours &amp; Greetings</text><rect x="65" y="277" width="158" height="7" rx="3.5" fill="#ffca3a"/><text x="64" y="332" fill="#dcecf8" font-size="25">Weekly hours, timed messages and countdowns.</text><text x="64" y="382" fill="#b9d8ed" font-size="16">WORDPRESS BLOCK  ·  BRICKS  ·  ETCH  ·  SHORTCODE</text></g>
+  <rect x="824" y="42" width="670" height="416" rx="24" fill="#00162f" opacity=".5" filter="url(#shadow)"/><rect x="830" y="48" width="658" height="404" rx="21" fill="#fff"/><image href="real-ui-preview.png" x="836" y="54" width="646" height="392" preserveAspectRatio="xMidYMid slice" clip-path="url(#ui)"/>
 </svg>

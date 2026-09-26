@@ -28,6 +28,65 @@
         scheduleDismiss();
     }
 
+    function initTabs() {
+        const admin = document.querySelector('.tgb-admin');
+        const tabs = Array.from(document.querySelectorAll('[data-utg-tab]'));
+        const panels = Array.from(document.querySelectorAll('[data-utg-panel]'));
+        if (!admin || !tabs.length || !panels.length) {
+            return;
+        }
+
+        function showTab(key, updateHistory, focusTab) {
+            const selected = tabs.find(function (tab) { return tab.dataset.utgTab === key; });
+            if (!selected) {
+                return;
+            }
+            tabs.forEach(function (tab) {
+                const active = tab === selected;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                tab.tabIndex = active ? 0 : -1;
+            });
+            panels.forEach(function (panel) {
+                panel.hidden = panel.dataset.utgPanel !== key;
+            });
+            admin.dataset.view = key;
+            if (updateHistory) {
+                const url = new URL(selected.href);
+                window.history.pushState({ utgTab: key }, '', url);
+            }
+            if (focusTab) {
+                selected.focus();
+            }
+        }
+
+        tabs.forEach(function (tab, index) {
+            tab.addEventListener('click', function (event) {
+                event.preventDefault();
+                showTab(tab.dataset.utgTab, true, false);
+            });
+            tab.addEventListener('keydown', function (event) {
+                let next = index;
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + tabs.length) % tabs.length;
+                else if (event.key === 'Home') next = 0;
+                else if (event.key === 'End') next = tabs.length - 1;
+                else if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showTab(tab.dataset.utgTab, true, false);
+                    return;
+                } else return;
+                event.preventDefault();
+                showTab(tabs[next].dataset.utgTab, true, true);
+            });
+        });
+
+        window.addEventListener('popstate', function () {
+            const key = new URL(window.location.href).searchParams.get('tab') || 'overview';
+            showTab(key, false, false);
+        });
+    }
+
     function initPermissionSearch() {
         const search = document.querySelector('.utg-user-search');
         if (!search) {
@@ -224,8 +283,9 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initToast(); initPermissionSearch(); initScheduler(); initPreview(); });
+        document.addEventListener('DOMContentLoaded', function () { initTabs(); initToast(); initPermissionSearch(); initScheduler(); initPreview(); });
     } else {
+        initTabs();
         initToast();
         initPermissionSearch();
         initScheduler();

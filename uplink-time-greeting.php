@@ -705,9 +705,21 @@ class UplinkTimeGreeting {
         if (!is_array($data)) {
             return $data;
         }
+        $settings = $this->get_settings();
+        try {
+            $timezone = new DateTimeZone($settings['default_timezone'] ?: wp_timezone_string());
+        } catch (Exception $error) {
+            $timezone = wp_timezone();
+        }
+        $now = new DateTime('now', $timezone);
+        $current = $this->active_interval($now, $settings);
+        $next = $this->next_interval($now, $settings);
+        $opening = $this->next_interval($now, $settings, 'opening');
+        $time_format = get_option('time_format', 'g:i a');
+        $timezone_label = $settings['default_tz_abbr'] ?: $now->format('T');
         $week = $this->schedule_rows();
         foreach ($week as &$row) {
-            $row['is_today'] = $row['number'] === (int) wp_date('w', time(), wp_timezone());
+            $row['is_today'] = $row['number'] === (int) $now->format('w');
         }
         unset($row);
         $data['time_greeting'] = array(
@@ -715,6 +727,38 @@ class UplinkTimeGreeting {
             'date' => $this->plain_value('date'),
             'both' => $this->plain_value('both'),
             'schedule' => $this->plain_value('schedule'),
+            'timezone' => $timezone->getName(),
+            'timezone_abbr' => $timezone_label,
+            'now' => array(
+                'time' => wp_date($time_format, $now->getTimestamp(), $timezone),
+                'date' => wp_date(get_option('date_format', 'F j, Y'), $now->getTimestamp(), $timezone),
+                'timestamp' => $now->getTimestamp(),
+            ),
+            'current' => array(
+                'label' => $current['label'],
+                'start' => $current['start'],
+                'event' => $current['event'],
+                'message' => $current['message'],
+                'output' => $this->plain_value('greeting'),
+            ),
+            'next' => $next ? array(
+                'label' => $next['interval']['label'],
+                'time' => wp_date($time_format, $next['timestamp'], $timezone),
+                'countdown' => $this->format_duration($next['timestamp'] - $now->getTimestamp()),
+                'event' => $next['interval']['event'],
+                'message' => $next['interval']['message'],
+                'start' => $next['interval']['start'],
+                'timestamp' => $next['timestamp'],
+            ) : array(),
+            'opening' => $opening ? array(
+                'label' => $opening['interval']['label'],
+                'time' => wp_date($time_format, $opening['timestamp'], $timezone),
+                'countdown' => $this->format_duration($opening['timestamp'] - $now->getTimestamp()),
+                'event' => $opening['interval']['event'],
+                'message' => $opening['interval']['message'],
+                'start' => $opening['interval']['start'],
+                'timestamp' => $opening['timestamp'],
+            ) : array(),
             'days' => array_reduce($week, function ($days, $row) { $days[$row['key']] = $row['hours']; return $days; }, array()),
             'week' => $week,
         );
@@ -1095,7 +1139,10 @@ class UplinkTimeGreeting {
         if ('settings' === $current_tab) {
             $current_tab = 'overview';
         }
-        if (!in_array($current_tab, array('overview', 'schedule', 'usage', 'styling', 'permissions'), true)) {
+        if (in_array($current_tab, array('usage', 'styling'), true)) {
+            $current_tab = 'how-to';
+        }
+        if (!in_array($current_tab, array('overview', 'schedule', 'permissions', 'how-to'), true)) {
             $current_tab = 'overview';
         }
         if ('permissions' === $current_tab && !current_user_can('manage_options')) {
@@ -1132,41 +1179,37 @@ class UplinkTimeGreeting {
             <?php endif; ?>
 
             <!-- Tab Navigation -->
-            <nav class="tgb-tabs" aria-label="<?php esc_attr_e('Uplink Hours & Greetings sections', 'uplink-time-greeting'); ?>">
-                <a href="<?php echo esc_url(add_query_arg('tab', 'overview', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
-                   class="<?php echo $current_tab === 'overview' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'overview' ? 'aria-current="page"' : ''; ?>>
-                    <?php esc_html_e('Overview', 'uplink-time-greeting'); ?>
-                </a>
-                <a href="<?php echo esc_url(add_query_arg('tab', 'schedule', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
-                   class="<?php echo $current_tab === 'schedule' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'schedule' ? 'aria-current="page"' : ''; ?>>
-                    <?php esc_html_e('Weekly schedule', 'uplink-time-greeting'); ?>
-                </a>
-                <a href="<?php echo esc_url(add_query_arg('tab', 'usage', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
-                   class="<?php echo $current_tab === 'usage' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'usage' ? 'aria-current="page"' : ''; ?>>
-                    <?php esc_html_e('Use in editors', 'uplink-time-greeting'); ?>
-                </a>
-                <a href="<?php echo esc_url(add_query_arg('tab', 'styling', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
-                   class="<?php echo $current_tab === 'styling' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'styling' ? 'aria-current="page"' : ''; ?>>
-                    <?php esc_html_e('Appearance', 'uplink-time-greeting'); ?>
-                </a>
-                <?php if (current_user_can('manage_options')) : ?>
-                <a href="<?php echo esc_url(add_query_arg('tab', 'permissions', admin_url('options-general.php?page=time-greeting-settings'))); ?>"
-                   class="<?php echo $current_tab === 'permissions' ? 'is-active' : ''; ?>" <?php echo $current_tab === 'permissions' ? 'aria-current="page"' : ''; ?>>
-                    <?php esc_html_e('Permissions', 'uplink-time-greeting'); ?>
-                </a>
-                <?php endif; ?>
+            <nav class="tgb-tabs" role="tablist" aria-orientation="horizontal" aria-label="<?php esc_attr_e('Uplink Hours & Greetings sections', 'uplink-time-greeting'); ?>">
+                <?php
+                $tabs = array(
+                    'overview' => __('Overview', 'uplink-time-greeting'),
+                    'schedule' => __('Weekly schedule', 'uplink-time-greeting'),
+                );
+                if (current_user_can('manage_options')) {
+                    $tabs['permissions'] = __('Permissions', 'uplink-time-greeting');
+                }
+                $tabs['how-to'] = __('How to Use', 'uplink-time-greeting');
+                foreach ($tabs as $tab_key => $tab_label) {
+                    $tab_url = add_query_arg(array('tab' => $tab_key), admin_url('options-general.php?page=time-greeting-settings'));
+                    printf(
+                        '<a id="utg-tab-%1$s" href="%2$s" class="%3$s" role="tab" aria-controls="utg-panel-%1$s" aria-selected="%4$s" tabindex="%5$s" data-utg-tab="%1$s">%6$s</a>',
+                        esc_attr($tab_key),
+                        esc_url($tab_url),
+                        esc_attr($current_tab === $tab_key ? 'is-active' : ''),
+                        $current_tab === $tab_key ? 'true' : 'false',
+                        $current_tab === $tab_key ? '0' : '-1',
+                        esc_html($tab_label)
+                    );
+                }
+                ?>
             </nav>
 
             <div class="tgb-tab-content">
-                <?php if (in_array($current_tab, array('overview', 'schedule'), true)): ?>
-                    <?php $this->render_settings_tab($current_tab); ?>
-                <?php elseif ($current_tab === 'usage'): ?>
-                    <?php $this->render_usage_tab(); ?>
-                <?php elseif ($current_tab === 'styling'): ?>
-                    <?php $this->render_styling_tab(); ?>
-                <?php elseif ($current_tab === 'permissions'): ?>
-                    <?php $this->render_permissions_tab(); ?>
+                <?php $this->render_settings_tabs($current_tab); ?>
+                <?php if (current_user_can('manage_options')) : ?>
+                    <section id="utg-panel-permissions" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-permissions" data-utg-panel="permissions"<?php echo 'permissions' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_permissions_tab(); ?></section>
                 <?php endif; ?>
+                <section id="utg-panel-how-to" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-how-to" data-utg-panel="how-to"<?php echo 'how-to' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_how_to_tab(); ?></section>
             </div>
         </div>
 
@@ -1174,7 +1217,7 @@ class UplinkTimeGreeting {
     }
 
     /** Schedule and message controls. */
-    private function render_settings_tab($current_tab) {
+    private function render_settings_tabs($current_tab) {
         $settings = $this->get_settings();
         try {
             $preview_now = new DateTime('now', new DateTimeZone($settings['default_timezone'] ?: wp_timezone_string()));
@@ -1193,6 +1236,7 @@ class UplinkTimeGreeting {
         ?>
         <form method="post" action="options.php" class="tgb-settings-form">
             <?php settings_fields('tgb_settings_group'); ?>
+            <section id="utg-panel-schedule" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-schedule" data-utg-panel="schedule"<?php echo 'schedule' === $current_tab ? '' : ' hidden'; ?>>
             <section class="tgb-panel utg-schedule-panel">
                 <div class="tgb-panel-heading">
                     <div><p class="tgb-overline"><?php esc_html_e('SEVEN-DAY SCHEDULE', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Assign a schedule to each day', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Reuse one schedule across several days. Copy it when one day needs different hours or messages.', 'uplink-time-greeting'); ?></p></div>
@@ -1248,6 +1292,9 @@ class UplinkTimeGreeting {
                 </div>
                 <button type="button" class="button utg-add-profile"><?php esc_html_e('Add reusable schedule', 'uplink-time-greeting'); ?></button>
             </section>
+            <div class="tgb-save-row"><?php submit_button(__('Save schedule', 'uplink-time-greeting'), 'primary', 'submit', false); ?></div>
+            </section>
+            <section id="utg-panel-overview" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-overview" data-utg-panel="overview"<?php echo 'overview' === $current_tab ? '' : ' hidden'; ?>>
             <section class="tgb-panel utg-overview-panel">
                 <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('LOCAL TIME', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Uses the WordPress site timezone by default. Choose another timezone only when needed.', 'uplink-time-greeting'); ?></p></div></div>
                 <div class="tgb-default-fields">
@@ -1260,9 +1307,8 @@ class UplinkTimeGreeting {
                 <div class="tgb-field tgb-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-time-greeting'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-time-greeting'); ?></p></div>
                 <label class="tgb-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(TGB_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(TGB_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-time-greeting'); ?></label>
             </section>
-            <div class="tgb-save-row"><?php submit_button($current_tab === 'schedule' ? __('Save schedule', 'uplink-time-greeting') : __('Save settings', 'uplink-time-greeting'), 'primary', 'submit', false); ?></div>
-        </form>
-        <section class="tgb-panel tgb-preview utg-overview-panel">
+            <div class="tgb-save-row"><?php submit_button(__('Save settings', 'uplink-time-greeting'), 'primary', 'submit', false); ?></div>
+            <section class="tgb-panel tgb-preview utg-overview-panel">
             <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('OUTPUT EXAMPLES', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('What visitors see now', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('These examples use the same saved schedule and show each display option.', 'uplink-time-greeting'); ?></p></div></div>
             <div class="utg-preview-controls">
                 <label><?php esc_html_e('Preview date', 'uplink-time-greeting'); ?><input type="date" class="utg-preview-date" value="<?php echo esc_attr($preview_now->format('Y-m-d')); ?>"></label>
@@ -1276,7 +1322,9 @@ class UplinkTimeGreeting {
                 <?php endforeach; ?>
             </div>
             <p><?php esc_html_e('Preview uses saved settings. Countdowns in blocks and shortcodes refresh on the page.', 'uplink-time-greeting'); ?></p>
-        </section>
+            </section>
+            </section>
+        </form>
         <?php
     }
 
@@ -1334,35 +1382,22 @@ class UplinkTimeGreeting {
         <?php
     }
 
-    /** Usage examples for each supported editor. */
-    private function render_usage_tab() {
+    /** Usage and appearance guidance for every supported editor. */
+    private function render_how_to_tab() {
         ?>
         <div class="tgb-usage-grid">
             <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('WORDPRESS', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Insert the Uplink Hours & Greetings block, then choose greeting, date, both, or weekly schedule in the block sidebar.', 'uplink-time-greeting'); ?></p></section>
             <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('BRICKS', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements for each day, then style them in Bricks:', 'uplink-time-greeting'); ?></p><p><code>{utg_day}</code> <code>{utg_hours}</code> <code>{utg_state}</code> <code>{utg_key}</code> <code>{utg_today}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [time_greeting display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-time-greeting'); ?></p><p><code>{tgb_greeting}</code> <code>{tgb_date}</code> <code>{tgb_both}</code> <code>{tgb_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a live countdown.', 'uplink-time-greeting'); ?></p></section>
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('ETCH', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Options data', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Loop through the ordered week array to build semantic markup with your own classes:', 'uplink-time-greeting'); ?></p><p><code>{#loop options.time_greeting.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day includes state, is_today, and windows with machine-readable opening and closing times. Use a shortcode-capable element for the ready-made markup.', 'uplink-time-greeting'); ?></p></section>
+            <section class="tgb-panel tgb-etch-guide"><p class="tgb-overline"><?php esc_html_e('ETCH', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Options data', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-time-greeting'); ?></p>
+                <h3><?php esc_html_e('Ready-made outputs', 'uplink-time-greeting'); ?></h3><p><code>{options.time_greeting.greeting}</code> <code>{options.time_greeting.date}</code> <code>{options.time_greeting.both}</code> <code>{options.time_greeting.schedule}</code></p>
+                <h3><?php esc_html_e('Current and upcoming values', 'uplink-time-greeting'); ?></h3><p><code>{options.time_greeting.timezone}</code> <code>{options.time_greeting.timezone_abbr}</code> <code>{options.time_greeting.now.time}</code> <code>{options.time_greeting.now.date}</code> <code>{options.time_greeting.now.timestamp}</code></p><p><code>{options.time_greeting.current.label}</code> <code>{options.time_greeting.current.start}</code> <code>{options.time_greeting.current.event}</code> <code>{options.time_greeting.current.message}</code> <code>{options.time_greeting.current.output}</code></p><p><code>{options.time_greeting.next.label}</code> <code>{options.time_greeting.next.time}</code> <code>{options.time_greeting.next.countdown}</code> <code>{options.time_greeting.next.event}</code> <code>{options.time_greeting.next.message}</code> <code>{options.time_greeting.next.start}</code> <code>{options.time_greeting.next.timestamp}</code></p><p><code>{options.time_greeting.opening.label}</code> <code>{options.time_greeting.opening.time}</code> <code>{options.time_greeting.opening.countdown}</code> <code>{options.time_greeting.opening.event}</code> <code>{options.time_greeting.opening.message}</code> <code>{options.time_greeting.opening.start}</code> <code>{options.time_greeting.opening.timestamp}</code></p>
+                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-time-greeting'); ?></h3><p><code>{#loop options.time_greeting.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day also includes windows. Each window contains start, start_label, end, end_label, and overnight. Individual day strings are available at options.time_greeting.days.monday through sunday.', 'uplink-time-greeting'); ?></p>
+            </section>
             <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('SHORTCODE', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-time-greeting'); ?></h2><p><code>[time_greeting]</code> <code>[time_greeting display="both"]</code> <code>[time_greeting display="schedule"]</code></p><p><code>time_greeting_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-time-greeting'); ?></p></section>
-        </div>
-        <?php
-    }
-
-    /**
-     * Render styling tab content
-     */
-    private function render_styling_tab() {
-        ?>
-        <div class="tgb-section">
-            <h2><?php esc_html_e('Styling the block', 'uplink-time-greeting'); ?></h2>
-            <p><?php esc_html_e('The WordPress block inherits its theme\'s color and typography settings. You can also set color, spacing, and type in the block sidebar.', 'uplink-time-greeting'); ?></p>
-            <p><?php esc_html_e('These two CSS variables control the greeting weight and date style:', 'uplink-time-greeting'); ?></p>
-            <pre class="tgb-css-example"><code>.wp-block-time-greeting-block-time-greeting {
+            <section class="tgb-panel tgb-appearance-guide"><p class="tgb-overline"><?php esc_html_e('APPEARANCE', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-time-greeting'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-time-greeting'); ?></p><pre class="tgb-css-example"><code>.wp-block-time-greeting-block-time-greeting {
     --tgb-greeting-font-weight: 600;
     --tgb-date-font-style: italic;
-}</code></pre>
-        </div>
-        <div class="tgb-section">
-            <h2><?php esc_html_e('Bricks and Etch', 'uplink-time-greeting'); ?></h2>
-            <p><?php esc_html_e('Their dynamic data values are plain text. Style the text element in the builder.', 'uplink-time-greeting'); ?></p>
+}</code></pre><p><?php esc_html_e('The ready-made schedule uses these classes:', 'uplink-time-greeting'); ?></p><p><code>.utg-schedule</code> <code>.utg-schedule__day</code> <code>.utg-schedule__name</code> <code>.utg-schedule__hours</code> <code>.utg-schedule__interval</code> <code>.utg-schedule__status</code></p></section>
         </div>
         <?php
     }

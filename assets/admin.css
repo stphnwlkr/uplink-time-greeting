@@ -22,7 +22,9 @@
 .tgb-tabs a{display:inline-block;padding:10px 17px;border-radius:9px;color:#3c5063;text-decoration:none;font-weight:600}
 .tgb-tabs a:hover,.tgb-tabs a:focus{color:#183f58;background:#f1f5f7}
 .tgb-tabs a.is-active{color:#1b4056;background:#e9eff2}
+.tgb-tabs a:focus-visible{outline:2px solid #377fa2;outline-offset:2px;box-shadow:none}
 .tgb-tab-content{margin-top:22px}
+.tgb-tab-panel[hidden]{display:none!important}
 .utg-permission-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
 .utg-permission-group{min-width:0;margin:0;padding:0;border:0}
 .utg-permission-group legend{padding:0;color:#1d3146;font-size:17px;font-weight:700}
@@ -53,7 +55,6 @@
 .tgb-period-afternoon{background:#e99861;box-shadow:0 0 0 5px #fceadd}
 .tgb-period-evening{background:#7193b7;box-shadow:0 0 0 5px #eaf1f8}
 .tgb-period-night{background:#596a95;box-shadow:0 0 0 5px #e9ecf4}
-.tgb-admin[data-view="overview"] .utg-schedule-panel,.tgb-admin[data-view="schedule"] .utg-overview-panel{display:none}
 .utg-week-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .utg-day-row{min-width:0;border:1px solid #e2e9ed;border-radius:10px;background:#fafcfd}
 .utg-day-row summary{display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;color:#26384a}
@@ -128,6 +129,8 @@
 .tgb-preview>p:last-child{margin-bottom:0;font-size:12px}
 .tgb-usage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .tgb-usage-grid .tgb-panel{margin:0;min-height:190px}
+.tgb-etch-guide,.tgb-appearance-guide{grid-column:1/-1}
+.tgb-usage-grid h3{margin-top:18px;font-size:14px}
 .tgb-admin code{display:inline-block;margin:3px 3px 3px 0;padding:3px 6px;border-radius:5px;background:#edf3f6;color:#204761;overflow-wrap:anywhere;white-space:normal}
 .tgb-css-example{padding:18px;border:1px solid #dfe7ec;border-radius:9px;background:#f7fafb;overflow-x:auto}
 .tgb-css-example code{display:block;margin:0;padding:0;background:none;white-space:pre}
