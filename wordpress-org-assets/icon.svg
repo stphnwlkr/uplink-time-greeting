@@ -1,4 +1,29 @@
-<?xml version='1.0' encoding='utf-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="34" fill="#fff" /><g transform="translate(30 27) scale(0.133)"><path d="M899.89,228.83h181.94c92.1,0,167.45,75.39,167.45,167.54s-75.39,167.54-167.45,167.54h-217.53v228.83h217.56c217.89,0,396.14-178.34,396.14-396.37S1299.65,0,1081.86,0h-304.3c40.89,76.2,81.59,152.53,122.33,228.83h0Z" style="fill: #003362; fill-rule: evenodd;" />
-  <path d="M563.62,387.93v404.78c0,92.08-75.32,167.54-167.45,167.54s-167.45-75.39-167.45-167.54v-396.37H0v396.4c0,217.96,178.25,396.33,396.17,396.33s396.17-178.34,396.17-396.33v-404.97c14.22,4.88,29.19,10.58,45.16,16.95,30.84,12.32,65.56-13.33,49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68,114.79-120.13,224.69-181.36,339.25-16.42,34.61,18.33,60.26,49.14,47.93,16.1-6.44,31.13-12.03,45.35-16.79h0Z" style="fill: #0071cc; fill-rule: evenodd;" />
-</g><rect x="54" y="219" width="148" height="6" rx="3" fill="#0071cc" /></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Uplink Hours &amp; Greetings</title>
+  <desc id="desc">Uplink arrow mark combined with a clock face.</desc>
+  <defs>
+    <linearGradient id="bg" x1="28" y1="18" x2="228" y2="238" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#061e40"/>
+      <stop offset="1" stop-color="#0b4f82"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="84" y1="49" x2="164" y2="164" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22a8ff"/>
+      <stop offset="1" stop-color="#0071cc"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="250" height="250" rx="38" fill="url(#bg)" stroke="#d7e7f4" stroke-width="6"/>
+  <circle cx="128" cy="112" r="70" fill="#fff" opacity=".08"/>
+  <circle cx="128" cy="112" r="61" fill="none" stroke="#fff" stroke-width="8"/>
+  <circle cx="128" cy="112" r="61" fill="none" stroke="#ffca3a" stroke-width="8" stroke-linecap="round" stroke-dasharray="58 325" transform="rotate(-91 128 112)"/>
+  <circle cx="128" cy="112" r="5" fill="#ffca3a"/>
+  <path d="M128 112V72M128 112l29 21" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  <g fill="#8bd0ff">
+    <circle cx="128" cy="51" r="3.5"/><circle cx="189" cy="112" r="3.5"/><circle cx="128" cy="173" r="3.5"/><circle cx="67" cy="112" r="3.5"/>
+  </g>
+  <g transform="translate(92 80) scale(.049)">
+    <path d="M899.89 228.83h181.94c92.1 0 167.45 75.39 167.45 167.54s-75.39 167.54-167.45 167.54H864.3v228.83h217.56c217.89 0 396.14-178.34 396.14-396.37S1299.65 0 1081.86 0h-304.3c40.89 76.2 81.59 152.53 122.33 228.83Z" fill="#dff2ff"/>
+    <path d="M563.62 387.93v404.78c0 92.08-75.32 167.54-167.45 167.54s-167.45-75.39-167.45-167.54V396.34H0v396.4c0 217.96 178.25 396.33 396.17 396.33s396.17-178.34 396.17-396.33V387.77c14.22 4.88 29.19 10.58 45.16 16.95 30.84 12.32 65.56-13.33 49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68 114.79-120.13 224.69-181.36 339.25-16.42 34.61 18.33 60.26 49.14 47.93 16.1-6.44 31.13-12.03 45.35-16.79Z" fill="url(#blue)"/>
+  </g>
+  <text x="128" y="207" text-anchor="middle" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" letter-spacing="1.5">HOURS</text>
+  <text x="128" y="228" text-anchor="middle" fill="#9fd8ff" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">&amp; GREETINGS</text>
+</svg>
