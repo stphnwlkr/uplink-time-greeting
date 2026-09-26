@@ -18,16 +18,16 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('TGB_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('TGB_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('TGB_PLUGIN_VERSION', '1.0.0');
-define('TGB_OPTION_NAME', 'utg_settings');
-define('TGB_PERMISSIONS_OPTION', 'utg_permissions');
+define('UPLINK_TIME_GREETING_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('UPLINK_TIME_GREETING_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('UPLINK_TIME_GREETING_PLUGIN_VERSION', '1.0.0');
+define('UPLINK_TIME_GREETING_OPTION_NAME', 'utg_settings');
+define('UPLINK_TIME_GREETING_PERMISSIONS_OPTION', 'utg_permissions');
 
 /**
  * Main plugin class
  */
-class UplinkTimeGreeting {
+class Uplink_Time_Greeting_Plugin {
     private static $instance = null;
     private $admin_feedback = array();
 
@@ -62,7 +62,7 @@ class UplinkTimeGreeting {
         // Plugin activation/deactivation hooks
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
-        register_uninstall_hook(__FILE__, array('UplinkTimeGreeting', 'uninstall'));
+        register_uninstall_hook(__FILE__, array('Uplink_Time_Greeting_Plugin', 'uninstall'));
 
     }
 
@@ -72,17 +72,17 @@ class UplinkTimeGreeting {
     public function init() {
         // Pre-release builds saved a timezone without recording whether it was
         // chosen or copied on activation. Move those installs to the live site default.
-        $stored_settings = get_option(TGB_OPTION_NAME, false);
+        $stored_settings = get_option(UPLINK_TIME_GREETING_OPTION_NAME, false);
         if (is_array($stored_settings) && empty($stored_settings['timezone_wp_default_migrated'])) {
             $stored_settings['default_timezone'] = '';
             unset($stored_settings['timezone_default_migrated']);
             $stored_settings['timezone_wp_default_migrated'] = true;
-            update_option(TGB_OPTION_NAME, $stored_settings);
+            update_option(UPLINK_TIME_GREETING_OPTION_NAME, $stored_settings);
         }
 
-        wp_register_script('tgb-editor', TGB_PLUGIN_URL . 'assets/block-editor.js', array(
+        wp_register_script('tgb-editor', UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/block-editor.js', array(
             'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'
-        ), TGB_PLUGIN_VERSION, true);
+        ), UPLINK_TIME_GREETING_PLUGIN_VERSION, true);
         wp_set_script_translations('tgb-editor', 'uplink-time-greeting');
         // Register the block using block.json
         if (function_exists('register_block_type')) {
@@ -105,12 +105,12 @@ class UplinkTimeGreeting {
             'default_timezone' => '',
             'default_tz_abbr' => '',
             'timezone_wp_default_migrated' => true,
-            'plugin_version' => TGB_PLUGIN_VERSION,
+            'plugin_version' => UPLINK_TIME_GREETING_PLUGIN_VERSION,
             'activation_date' => current_time('mysql')
         );
 
         // Only add options if they don't exist (prevents overwriting on reactivation)
-        if (false === get_option(TGB_OPTION_NAME, false)) {
+        if (false === get_option(UPLINK_TIME_GREETING_OPTION_NAME, false)) {
             $legacy_options = get_option('tgb_settings', array());
             $initial_options = is_array($legacy_options) && !empty($legacy_options)
                 ? wp_parse_args($legacy_options, $default_options)
@@ -118,24 +118,24 @@ class UplinkTimeGreeting {
             if (!empty($legacy_options) && is_array($legacy_options)) {
                 $initial_options['profiles'][0]['intervals'] = $this->legacy_intervals($legacy_options);
             }
-            $initial_options['plugin_version'] = TGB_PLUGIN_VERSION;
-            add_option(TGB_OPTION_NAME, $initial_options);
+            $initial_options['plugin_version'] = UPLINK_TIME_GREETING_PLUGIN_VERSION;
+            add_option(UPLINK_TIME_GREETING_OPTION_NAME, $initial_options);
         }
 
         // Update version if different
-        $current_options = get_option(TGB_OPTION_NAME, array());
+        $current_options = get_option(UPLINK_TIME_GREETING_OPTION_NAME, array());
         if (empty($current_options['profiles'])) {
             $current_options['profiles'] = $this->default_profiles();
             $current_options['profiles'][0]['intervals'] = !empty($current_options['intervals']) && is_array($current_options['intervals'])
                 ? $this->normalize_intervals($current_options['intervals'])
                 : $this->legacy_intervals($current_options);
             $current_options['week'] = $this->default_week();
-            update_option(TGB_OPTION_NAME, $current_options);
+            update_option(UPLINK_TIME_GREETING_OPTION_NAME, $current_options);
         }
-        if (empty($current_options['plugin_version']) || $current_options['plugin_version'] !== TGB_PLUGIN_VERSION) {
-            $current_options['plugin_version'] = TGB_PLUGIN_VERSION;
+        if (empty($current_options['plugin_version']) || $current_options['plugin_version'] !== UPLINK_TIME_GREETING_PLUGIN_VERSION) {
+            $current_options['plugin_version'] = UPLINK_TIME_GREETING_PLUGIN_VERSION;
             $current_options['last_updated'] = current_time('mysql');
-            update_option(TGB_OPTION_NAME, $current_options);
+            update_option(UPLINK_TIME_GREETING_OPTION_NAME, $current_options);
         }
 
         // Flush rewrite rules
@@ -153,8 +153,8 @@ class UplinkTimeGreeting {
      * Plugin uninstall - Also clean up (in case deactivate didn't run)
      */
     public static function uninstall() {
-        delete_option(TGB_OPTION_NAME);
-        delete_option(TGB_PERMISSIONS_OPTION);
+        delete_option(UPLINK_TIME_GREETING_OPTION_NAME);
+        delete_option(UPLINK_TIME_GREETING_PERMISSIONS_OPTION);
     }
 
     /**
@@ -170,7 +170,7 @@ class UplinkTimeGreeting {
             'default_tz_abbr' => ''
         );
 
-        $settings = get_option(TGB_OPTION_NAME, $defaults);
+        $settings = get_option(UPLINK_TIME_GREETING_OPTION_NAME, $defaults);
         $settings = wp_parse_args($settings, $defaults);
         if (empty($settings['profiles']) || !is_array($settings['profiles'])) {
             $settings['profiles'] = $this->default_profiles();
@@ -857,8 +857,8 @@ class UplinkTimeGreeting {
 
     public function admin_assets($hook) {
         if ('settings_page_time-greeting-settings' === $hook) {
-            wp_enqueue_style('tgb-admin', TGB_PLUGIN_URL . 'assets/admin.css', array(), TGB_PLUGIN_VERSION);
-            wp_enqueue_script('tgb-admin', TGB_PLUGIN_URL . 'assets/admin.js', array(), TGB_PLUGIN_VERSION, true);
+            wp_enqueue_style('tgb-admin', UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/admin.css', array(), UPLINK_TIME_GREETING_PLUGIN_VERSION);
+            wp_enqueue_script('tgb-admin', UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/admin.js', array(), UPLINK_TIME_GREETING_PLUGIN_VERSION, true);
             wp_localize_script('tgb-admin', 'utgAdmin', array(
                 'newSchedule' => __('New schedule', 'uplink-time-greeting'),
                 /* translators: %s: weekday name for a copied schedule. */
@@ -876,8 +876,8 @@ class UplinkTimeGreeting {
     }
 
     private function enqueue_live_assets() {
-        wp_enqueue_style('utg-output', TGB_PLUGIN_URL . 'assets/block-style.css', array(), TGB_PLUGIN_VERSION);
-        wp_enqueue_script('utg-live', TGB_PLUGIN_URL . 'assets/live.js', array('wp-i18n'), TGB_PLUGIN_VERSION, true);
+        wp_enqueue_style('utg-output', UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/block-style.css', array(), UPLINK_TIME_GREETING_PLUGIN_VERSION);
+        wp_enqueue_script('utg-live', UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/live.js', array('wp-i18n'), UPLINK_TIME_GREETING_PLUGIN_VERSION, true);
         wp_set_script_translations('utg-live', 'uplink-time-greeting');
         wp_localize_script('utg-live', 'utgLive', array(
             'restUrl' => esc_url_raw(rest_url('uplink-time-greeting/v1/render')),
@@ -914,7 +914,7 @@ class UplinkTimeGreeting {
 
         $remaining = array();
         foreach (get_settings_errors() as $feedback) {
-            if (TGB_OPTION_NAME === $feedback['setting'] || TGB_PERMISSIONS_OPTION === $feedback['setting'] ||
+            if (UPLINK_TIME_GREETING_OPTION_NAME === $feedback['setting'] || UPLINK_TIME_GREETING_PERMISSIONS_OPTION === $feedback['setting'] ||
                 ('general' === $feedback['setting'] && 'settings_updated' === $feedback['code'])) {
                 $this->admin_feedback[] = $feedback;
             } else {
@@ -943,12 +943,12 @@ class UplinkTimeGreeting {
     public function admin_init() {
         register_setting(
             'tgb_settings_group',
-            TGB_OPTION_NAME,
+            UPLINK_TIME_GREETING_OPTION_NAME,
             array($this, 'sanitize_settings')
         );
         register_setting(
             'tgb_permissions_group',
-            TGB_PERMISSIONS_OPTION,
+            UPLINK_TIME_GREETING_PERMISSIONS_OPTION,
             array($this, 'sanitize_permissions')
         );
     }
@@ -969,7 +969,7 @@ class UplinkTimeGreeting {
         if (user_can($user, 'manage_options')) {
             return array('exist');
         }
-        $permissions = get_option(TGB_PERMISSIONS_OPTION, array());
+        $permissions = get_option(UPLINK_TIME_GREETING_PERMISSIONS_OPTION, array());
         $roles = is_array($permissions) ? ($permissions['roles'] ?? array()) : array();
         $users = is_array($permissions) ? ($permissions['users'] ?? array()) : array();
         if (in_array((int) $user_id, array_map('intval', (array) $users), true) || array_intersect((array) $user->roles, (array) $roles)) {
@@ -980,7 +980,7 @@ class UplinkTimeGreeting {
 
     public function sanitize_permissions($input) {
         if (!current_user_can('manage_options')) {
-            return get_option(TGB_PERMISSIONS_OPTION, array());
+            return get_option(UPLINK_TIME_GREETING_PERMISSIONS_OPTION, array());
         }
         $input = is_array($input) ? $input : array();
         $available_roles = array_keys(wp_roles()->roles);
@@ -1000,11 +1000,11 @@ class UplinkTimeGreeting {
             return $this->get_settings();
         }
         $sanitized = array();
-        $current_settings = get_option(TGB_OPTION_NAME, array());
+        $current_settings = get_option(UPLINK_TIME_GREETING_OPTION_NAME, array());
         $defaults = $this->get_settings();
 
         // Preserve existing data that shouldn't be overwritten
-        $sanitized['plugin_version'] = TGB_PLUGIN_VERSION;
+        $sanitized['plugin_version'] = UPLINK_TIME_GREETING_PLUGIN_VERSION;
         $sanitized['activation_date'] = $current_settings['activation_date'] ?? current_time('mysql');
         $sanitized['last_updated'] = current_time('mysql');
         $sanitized['timezone_wp_default_migrated'] = true;
@@ -1058,7 +1058,7 @@ class UplinkTimeGreeting {
             $week[$day] = $id;
         }
         if ($invalid_schedule) {
-            add_settings_error(TGB_OPTION_NAME, 'profiles', __('Use a named schedule for every day. Each schedule needs 1–24 entries with unique start times. The previous week was kept.', 'uplink-time-greeting'));
+            add_settings_error(UPLINK_TIME_GREETING_OPTION_NAME, 'profiles', __('Use a named schedule for every day. Each schedule needs 1–24 entries with unique start times. The previous week was kept.', 'uplink-time-greeting'));
             $sanitized['profiles'] = $defaults['profiles'];
             $sanitized['week'] = $defaults['week'];
         } else {
@@ -1075,7 +1075,7 @@ class UplinkTimeGreeting {
             try {
                 new DateTimeZone($sanitized['default_timezone']);
             } catch (Exception $error) {
-                add_settings_error(TGB_OPTION_NAME, 'default_timezone',
+                add_settings_error(UPLINK_TIME_GREETING_OPTION_NAME, 'default_timezone',
                     __('Invalid timezone identifier.', 'uplink-time-greeting'));
                 $sanitized['default_timezone'] = $current_settings['default_timezone'] ?? '';
             }
@@ -1092,7 +1092,7 @@ class UplinkTimeGreeting {
             '<input type="text" id="%1$s" name="%3$s[%1$s]" value="%2$s" class="regular-text" />',
             esc_attr($args['field']),
             esc_attr($value),
-            esc_attr(TGB_OPTION_NAME)
+            esc_attr(UPLINK_TIME_GREETING_OPTION_NAME)
         );
     }
 
@@ -1101,7 +1101,7 @@ class UplinkTimeGreeting {
         $current_value = $settings[$args['field']];
         $timezones = timezone_identifiers_list();
 
-        printf('<select id="%1$s" name="%2$s[%1$s]">', esc_attr($args['field']), esc_attr(TGB_OPTION_NAME));
+        printf('<select id="%1$s" name="%2$s[%1$s]">', esc_attr($args['field']), esc_attr(UPLINK_TIME_GREETING_OPTION_NAME));
 
         printf(
             '<option value=""%1$s>%2$s</option>',
@@ -1152,9 +1152,9 @@ class UplinkTimeGreeting {
         ?>
         <div class="wrap tgb-admin" data-view="<?php echo esc_attr($current_tab); ?>">
             <div class="tgb-admin-header">
-                <div class="tgb-header-icon" aria-hidden="true"><img src="<?php echo esc_url(TGB_PLUGIN_URL . 'assets/uplink-mark.svg'); ?>" alt=""></div>
+                <div class="tgb-header-icon" aria-hidden="true"><img src="<?php echo esc_url(UPLINK_TIME_GREETING_PLUGIN_URL . 'assets/uplink-mark.svg'); ?>" alt=""></div>
                 <div><p class="tgb-eyebrow"><?php esc_html_e('UPLINK · SETTINGS', 'uplink-time-greeting'); ?></p><h1><?php esc_html_e('Hours & Greetings', 'uplink-time-greeting'); ?></h1><p><?php esc_html_e('Set what visitors see throughout your week.', 'uplink-time-greeting'); ?></p></div>
-                <span class="tgb-version"><?php echo esc_html('v' . TGB_PLUGIN_VERSION); ?></span>
+                <span class="tgb-version"><?php echo esc_html('v' . UPLINK_TIME_GREETING_PLUGIN_VERSION); ?></span>
             </div>
 
             <?php if (!empty($this->admin_feedback)) : ?>
@@ -1247,7 +1247,7 @@ class UplinkTimeGreeting {
                     <details class="utg-day-row" data-day="<?php echo esc_attr($day); ?>">
                         <summary><strong><?php echo esc_html($days[$day]); ?></strong><span class="utg-day-summary"><?php echo esc_html($settings['profiles'][array_search($settings['week'][$day], array_column($settings['profiles'], 'id'), true)]['name'] ?? ''); ?></span></summary>
                         <div class="utg-day-controls"><label for="utg-day-<?php echo esc_attr($day); ?>"><?php esc_html_e('Schedule', 'uplink-time-greeting'); ?></label>
-                        <select id="utg-day-<?php echo esc_attr($day); ?>" name="<?php echo esc_attr(TGB_OPTION_NAME . '[week][' . $day . ']'); ?>" class="utg-day-profile">
+                        <select id="utg-day-<?php echo esc_attr($day); ?>" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[week][' . $day . ']'); ?>" class="utg-day-profile">
                             <?php foreach ($settings['profiles'] as $profile) : ?>
                             <option value="<?php echo esc_attr($profile['id']); ?>" <?php selected($settings['week'][$day], $profile['id']); ?>><?php echo esc_html($profile['name']); ?></option>
                             <?php endforeach; ?>
@@ -1277,10 +1277,10 @@ class UplinkTimeGreeting {
                     <?php foreach ($settings['profiles'] as $profile_index => $profile) : ?>
                     <div class="utg-profile" data-profile-id="<?php echo esc_attr($profile['id']); ?>">
                         <div class="utg-profile-heading">
-                            <div class="utg-profile-name"><label><?php esc_html_e('Schedule name', 'uplink-time-greeting'); ?><input type="text" class="utg-profile-name-input" name="<?php echo esc_attr(TGB_OPTION_NAME . '[profiles][' . $profile_index . '][name]'); ?>" value="<?php echo esc_attr($profile['name']); ?>" maxlength="80" required></label><input type="hidden" class="utg-profile-id" name="<?php echo esc_attr(TGB_OPTION_NAME . '[profiles][' . $profile_index . '][id]'); ?>" value="<?php echo esc_attr($profile['id']); ?>"></div>
+                            <div class="utg-profile-name"><label><?php esc_html_e('Schedule name', 'uplink-time-greeting'); ?><input type="text" class="utg-profile-name-input" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[profiles][' . $profile_index . '][name]'); ?>" value="<?php echo esc_attr($profile['name']); ?>" maxlength="80" required></label><input type="hidden" class="utg-profile-id" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[profiles][' . $profile_index . '][id]'); ?>" value="<?php echo esc_attr($profile['id']); ?>"></div>
                             <button type="button" class="button utg-remove-profile"><?php esc_html_e('Remove schedule', 'uplink-time-greeting'); ?></button>
                         </div>
-                        <label class="tgb-checkbox-field utg-closed-field"><input type="hidden" name="<?php echo esc_attr(TGB_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="0"><input type="checkbox" name="<?php echo esc_attr(TGB_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="1" <?php checked(!empty($profile['closed'])); ?>><?php esc_html_e('Closed all day', 'uplink-time-greeting'); ?></label>
+                        <label class="tgb-checkbox-field utg-closed-field"><input type="hidden" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="0"><input type="checkbox" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="1" <?php checked(!empty($profile['closed'])); ?>><?php esc_html_e('Closed all day', 'uplink-time-greeting'); ?></label>
                         <div class="utg-intervals">
                             <?php foreach ($profile['intervals'] as $row_index => $interval) : ?>
                                 <?php $this->render_interval_row($profile_index, $row_index, $interval); ?>
@@ -1305,7 +1305,7 @@ class UplinkTimeGreeting {
             <section class="tgb-panel utg-overview-panel">
                 <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('DATE WORDING', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Date introduction', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Set the words that appear before the date in the combined output and, optionally, Date only.', 'uplink-time-greeting'); ?></p></div></div>
                 <div class="tgb-field tgb-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-time-greeting'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-time-greeting'); ?></p></div>
-                <label class="tgb-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(TGB_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(TGB_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-time-greeting'); ?></label>
+                <label class="tgb-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(UPLINK_TIME_GREETING_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-time-greeting'); ?></label>
             </section>
             <div class="tgb-save-row"><?php submit_button(__('Save settings', 'uplink-time-greeting'), 'primary', 'submit', false); ?></div>
             <section class="tgb-panel tgb-preview utg-overview-panel">
@@ -1329,7 +1329,7 @@ class UplinkTimeGreeting {
     }
 
     private function render_interval_row($profile_index, $row_index, $interval) {
-        $name = TGB_OPTION_NAME . '[profiles][' . $profile_index . '][intervals][' . $row_index . ']';
+        $name = UPLINK_TIME_GREETING_OPTION_NAME . '[profiles][' . $profile_index . '][intervals][' . $row_index . ']';
         ?>
         <div class="utg-interval-row">
             <label><?php esc_html_e('Starts at', 'uplink-time-greeting'); ?><input type="time" step="60" name="<?php echo esc_attr($name . '[start]'); ?>" value="<?php echo esc_attr($interval['start']); ?>" required></label>
@@ -1343,14 +1343,14 @@ class UplinkTimeGreeting {
 
     /** Administrator-only access controls for changing plugin settings. */
     private function render_permissions_tab() {
-        $permissions = get_option(TGB_PERMISSIONS_OPTION, array());
+        $permissions = get_option(UPLINK_TIME_GREETING_PERMISSIONS_OPTION, array());
         $selected_roles = is_array($permissions) ? ($permissions['roles'] ?? array()) : array();
         $selected_users = is_array($permissions) ? ($permissions['users'] ?? array()) : array();
         $users = get_users(array('orderby' => 'display_name', 'order' => 'ASC'));
         ?>
         <form method="post" action="options.php" class="utg-permissions-form">
             <?php settings_fields('tgb_permissions_group'); ?>
-            <input type="hidden" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[_submitted]" value="1">
+            <input type="hidden" name="<?php echo esc_attr(UPLINK_TIME_GREETING_PERMISSIONS_OPTION); ?>[_submitted]" value="1">
             <section class="tgb-panel">
                 <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('ACCESS CONTROL', 'uplink-time-greeting'); ?></p><h2><?php esc_html_e('Who can update settings', 'uplink-time-greeting'); ?></h2><p><?php esc_html_e('Administrators always have access. You can also allow entire roles or specific users to edit the schedule and other plugin settings.', 'uplink-time-greeting'); ?></p></div></div>
                 <div class="utg-permission-grid">
@@ -1360,7 +1360,7 @@ class UplinkTimeGreeting {
                         <div class="utg-permission-list">
                             <div class="utg-permission-choice utg-permission-fixed"><span><?php esc_html_e('Administrator', 'uplink-time-greeting'); ?></span><span><?php esc_html_e('Always allowed', 'uplink-time-greeting'); ?></span></div>
                             <?php foreach (wp_roles()->roles as $role_key => $role) : if ('administrator' === $role_key) { continue; } ?>
-                                <label class="utg-permission-choice"><input type="checkbox" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[roles][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, (array) $selected_roles, true)); ?>><span><?php echo esc_html(translate_user_role($role['name'])); ?></span></label>
+                                <label class="utg-permission-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_TIME_GREETING_PERMISSIONS_OPTION); ?>[roles][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, (array) $selected_roles, true)); ?>><span><?php echo esc_html(translate_user_role($role['name'])); ?></span></label>
                             <?php endforeach; ?>
                         </div>
                     </fieldset>
@@ -1371,7 +1371,7 @@ class UplinkTimeGreeting {
                         <input type="search" id="utg-user-search" class="utg-user-search" placeholder="<?php esc_attr_e('Search by name or username', 'uplink-time-greeting'); ?>">
                         <div class="utg-permission-list utg-user-list">
                             <?php foreach ($users as $user) : if (user_can($user, 'manage_options')) { continue; } ?>
-                                <label class="utg-permission-choice utg-user-choice"><input type="checkbox" name="<?php echo esc_attr(TGB_PERMISSIONS_OPTION); ?>[users][]" value="<?php echo esc_attr($user->ID); ?>" <?php checked(in_array((int) $user->ID, array_map('intval', (array) $selected_users), true)); ?>><span><?php echo esc_html($user->display_name); ?><small><?php echo esc_html($user->user_login); ?></small></span></label>
+                                <label class="utg-permission-choice utg-user-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_TIME_GREETING_PERMISSIONS_OPTION); ?>[users][]" value="<?php echo esc_attr($user->ID); ?>" <?php checked(in_array((int) $user->ID, array_map('intval', (array) $selected_users), true)); ?>><span><?php echo esc_html($user->display_name); ?><small><?php echo esc_html($user->user_login); ?></small></span></label>
                             <?php endforeach; ?>
                         </div>
                     </fieldset>
@@ -1404,11 +1404,11 @@ class UplinkTimeGreeting {
 }
 
 // Initialize the plugin
-UplinkTimeGreeting::get_instance();
+Uplink_Time_Greeting_Plugin::get_instance();
 
 /**
  * Echo function for external use (Bricks Builder, etc.)
  */
 function time_greeting_echo($atts = array()) {
-    UplinkTimeGreeting::get_instance()->echo_greeting($atts);
+    Uplink_Time_Greeting_Plugin::get_instance()->echo_greeting($atts);
 }
