@@ -21,27 +21,27 @@
 
     // Common timezone options
     const timezoneOptions = [
-        { label: __('Use WordPress site timezone', 'uplink-time-greeting'), value: '' },
-        { label: __('America/New_York (ET)', 'uplink-time-greeting'), value: 'America/New_York' },
-        { label: __('America/Chicago (CT)', 'uplink-time-greeting'), value: 'America/Chicago' },
-        { label: __('America/Denver (MT)', 'uplink-time-greeting'), value: 'America/Denver' },
-        { label: __('America/Los_Angeles (PT)', 'uplink-time-greeting'), value: 'America/Los_Angeles' },
-        { label: __('Europe/London (GMT)', 'uplink-time-greeting'), value: 'Europe/London' },
-        { label: __('Europe/Paris (CET)', 'uplink-time-greeting'), value: 'Europe/Paris' },
-        { label: __('Asia/Tokyo (JST)', 'uplink-time-greeting'), value: 'Asia/Tokyo' },
-        { label: __('Australia/Sydney (AEST)', 'uplink-time-greeting'), value: 'Australia/Sydney' },
-        { label: __('Custom', 'uplink-time-greeting'), value: 'custom' }
+        { label: __('Use WordPress site timezone', 'uplink-hours-greetings'), value: '' },
+        { label: __('America/New_York (ET)', 'uplink-hours-greetings'), value: 'America/New_York' },
+        { label: __('America/Chicago (CT)', 'uplink-hours-greetings'), value: 'America/Chicago' },
+        { label: __('America/Denver (MT)', 'uplink-hours-greetings'), value: 'America/Denver' },
+        { label: __('America/Los_Angeles (PT)', 'uplink-hours-greetings'), value: 'America/Los_Angeles' },
+        { label: __('Europe/London (GMT)', 'uplink-hours-greetings'), value: 'Europe/London' },
+        { label: __('Europe/Paris (CET)', 'uplink-hours-greetings'), value: 'Europe/Paris' },
+        { label: __('Asia/Tokyo (JST)', 'uplink-hours-greetings'), value: 'Asia/Tokyo' },
+        { label: __('Australia/Sydney (AEST)', 'uplink-hours-greetings'), value: 'Australia/Sydney' },
+        { label: __('Custom', 'uplink-hours-greetings'), value: 'custom' }
     ];
 
     // Common date format options
     const dateFormatOptions = [
-        { label: __('January 1, 2024 (F j, Y)', 'uplink-time-greeting'), value: 'F j, Y' },
-        { label: __('Jan 1, 2024 (M j, Y)', 'uplink-time-greeting'), value: 'M j, Y' },
-        { label: __('1/1/2024 (n/j/Y)', 'uplink-time-greeting'), value: 'n/j/Y' },
-        { label: __('01/01/2024 (m/d/Y)', 'uplink-time-greeting'), value: 'm/d/Y' },
-        { label: __('2024-01-01 (Y-m-d)', 'uplink-time-greeting'), value: 'Y-m-d' },
-        { label: __('Monday, January 1, 2024 (l, F j, Y)', 'uplink-time-greeting'), value: 'l, F j, Y' },
-        { label: __('Custom', 'uplink-time-greeting'), value: 'custom' }
+        { label: __('January 1, 2024 (F j, Y)', 'uplink-hours-greetings'), value: 'F j, Y' },
+        { label: __('Jan 1, 2024 (M j, Y)', 'uplink-hours-greetings'), value: 'M j, Y' },
+        { label: __('1/1/2024 (n/j/Y)', 'uplink-hours-greetings'), value: 'n/j/Y' },
+        { label: __('01/01/2024 (m/d/Y)', 'uplink-hours-greetings'), value: 'm/d/Y' },
+        { label: __('2024-01-01 (Y-m-d)', 'uplink-hours-greetings'), value: 'Y-m-d' },
+        { label: __('Monday, January 1, 2024 (l, F j, Y)', 'uplink-hours-greetings'), value: 'l, F j, Y' },
+        { label: __('Custom', 'uplink-hours-greetings'), value: 'custom' }
     ];
 
     // Auto-set timezone abbreviations
@@ -105,20 +105,20 @@
             el(InspectorControls, null,
                 // Display Settings Panel
                 el(PanelBody, {
-                    title: __('Display Settings', 'uplink-time-greeting'),
+                    title: __('Display Settings', 'uplink-hours-greetings'),
                     initialOpen: true
                 },
                     el(SelectControl, {
-                        label: __('Display Type', 'uplink-time-greeting'),
+                        label: __('Display Type', 'uplink-hours-greetings'),
                         value: display,
                         options: [
-                            { label: __('Greeting Only', 'uplink-time-greeting'), value: 'greeting' },
-                            { label: __('Date Only', 'uplink-time-greeting'), value: 'date' },
-                            { label: __('Both Greeting and Date', 'uplink-time-greeting'), value: 'both' },
-                            { label: __('Weekly Schedule', 'uplink-time-greeting'), value: 'schedule' }
+                            { label: __('Greeting Only', 'uplink-hours-greetings'), value: 'greeting' },
+                            { label: __('Date Only', 'uplink-hours-greetings'), value: 'date' },
+                            { label: __('Both Greeting and Date', 'uplink-hours-greetings'), value: 'both' },
+                            { label: __('Weekly Schedule', 'uplink-hours-greetings'), value: 'schedule' }
                         ],
                         onChange: (value) => setAttributes({ display: value }),
-                        help: __('Choose what to display in your time greeting block.', 'uplink-time-greeting')
+                        help: __('Choose what to display in your time greeting block.', 'uplink-hours-greetings')
                     }),
 
                     // Date format controls (only show if date is being displayed)
@@ -126,50 +126,50 @@
                         el('hr', { key: 'divider1', style: { margin: '16px 0' } }),
                         el(SelectControl, {
                             key: 'dateFormatSelect',
-                            label: __('Date Format', 'uplink-time-greeting'),
+                            label: __('Date Format', 'uplink-hours-greetings'),
                             value: (customDateFormat || needsCustomDateFormat) ? 'custom' : dateFormat,
                             options: dateFormatOptions,
                             onChange: handleDateFormatChange,
-                            help: __('Choose how the date should be formatted.', 'uplink-time-greeting')
+                            help: __('Choose how the date should be formatted.', 'uplink-hours-greetings')
                         }),
 
                         // Custom date format field
                         (customDateFormat || needsCustomDateFormat) && el(TextControl, {
                             key: 'customDateFormat',
-                            label: __('Custom Date Format', 'uplink-time-greeting'),
+                            label: __('Custom Date Format', 'uplink-hours-greetings'),
                             value: dateFormat,
                             onChange: (value) => setAttributes({ dateFormat: value }),
-                            help: __('Use PHP date format characters. Example: F j, Y', 'uplink-time-greeting')
+                            help: __('Use PHP date format characters. Example: F j, Y', 'uplink-hours-greetings')
                         })
                     ]
                 ),
 
                 // Timezone Settings Panel
                 el(PanelBody, {
-                    title: __('Timezone Settings', 'uplink-time-greeting'),
+                    title: __('Timezone Settings', 'uplink-hours-greetings'),
                     initialOpen: false
                 },
                     el(SelectControl, {
-                        label: __('Timezone', 'uplink-time-greeting'),
+                        label: __('Timezone', 'uplink-hours-greetings'),
                         value: (customTimezone || needsCustomTimezone) ? 'custom' : timezone,
                         options: timezoneOptions,
                         onChange: handleTimezoneChange,
-                        help: __('Follows the timezone in WordPress Settings → General unless an override is selected.', 'uplink-time-greeting')
+                        help: __('Follows the timezone in WordPress Settings → General unless an override is selected.', 'uplink-hours-greetings')
                     }),
 
                     // Custom timezone field
                     (customTimezone || needsCustomTimezone) && el(TextControl, {
-                        label: __('Custom Timezone', 'uplink-time-greeting'),
+                        label: __('Custom Timezone', 'uplink-hours-greetings'),
                         value: timezone,
                         onChange: (value) => setAttributes({ timezone: value }),
-                        help: __('Enter a valid PHP timezone identifier (e.g., America/New_York)', 'uplink-time-greeting')
+                        help: __('Enter a valid PHP timezone identifier (e.g., America/New_York)', 'uplink-hours-greetings')
                     }),
 
                     el(TextControl, {
-                        label: __('Timezone Abbreviation', 'uplink-time-greeting'),
+                        label: __('Timezone Abbreviation', 'uplink-hours-greetings'),
                         value: tzAbbr,
                         onChange: (value) => setAttributes({ tzAbbr: value }),
-                        help: __('Short abbreviation shown with time (e.g., ET, PT, GMT)', 'uplink-time-greeting')
+                        help: __('Short abbreviation shown with time (e.g., ET, PT, GMT)', 'uplink-hours-greetings')
                     })
                 )
             ),
@@ -182,12 +182,12 @@
                         attributes: attributes,
                         EmptyResponsePlaceholder: () => el(Placeholder, {
                             icon: 'clock',
-                            label: __('Uplink Hours & Greetings', 'uplink-time-greeting')
-                        }, __('Loading preview...', 'uplink-time-greeting')),
+                            label: __('Uplink Hours & Greetings', 'uplink-hours-greetings')
+                        }, __('Loading preview...', 'uplink-hours-greetings')),
                         ErrorResponsePlaceholder: ({ response }) => el(Placeholder, {
                             icon: 'warning',
-                            label: __('Time Greeting Error', 'uplink-time-greeting')
-                        }, __('Error loading preview. Please check your settings.', 'uplink-time-greeting'))
+                            label: __('Time Greeting Error', 'uplink-hours-greetings')
+                        }, __('Error loading preview. Please check your settings.', 'uplink-hours-greetings'))
                     })
                 )
             )
@@ -197,7 +197,7 @@
     // Register the block
     registerBlockType('time-greeting-block/time-greeting', {
         apiVersion: 3,
-        title: __('Uplink Hours & Greetings', 'uplink-time-greeting'),
+        title: __('Uplink Hours & Greetings', 'uplink-hours-greetings'),
         category: 'widgets',
         icon: 'clock',
         attributes: {

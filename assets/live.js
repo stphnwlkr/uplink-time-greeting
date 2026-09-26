@@ -7,7 +7,7 @@
     }
 
     function unit(count, singular, plural) {
-        return i18n._n(singular, plural, count, 'uplink-time-greeting').replace('%d', String(count));
+        return i18n._n(singular, plural, count, 'uplink-hours-greetings').replace('%d', String(count));
     }
 
     function duration(milliseconds) {

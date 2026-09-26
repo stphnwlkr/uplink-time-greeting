@@ -18,7 +18,7 @@ Administrators can use the **Permissions** tab to allow additional roles or indi
 | Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{utg_day}` and `{utg_hours}` in child elements. A Shortcode element with `[time_greeting display="schedule"]` provides ready-made semantic markup. `{tgb_schedule}` remains available as inline plain text. |
 | Etch | Loop over `options.time_greeting.week` to build a schedule with your own HTML and classes. Complete outputs, current and next entries, next opening, timezone, current clock, individual days, and machine-readable windows are available under `options.time_greeting`. |
 | Shortcode | `[time_greeting]`, `[time_greeting display="date"]`, `[time_greeting display="both"]`, or `[time_greeting display="schedule"]`. |
-| PHP | `time_greeting_echo( array( 'display' => 'both' ) );` |
+| PHP | `uplink_hours_greetings_echo( array( 'display' => 'both' ) );` |
 
 Blocks and shortcodes refresh countdowns and schedule changes on the page. Bricks tags and Etch options data are plain text resolved at page render time; use a shortcode-capable element for a live countdown. Page caching can delay the plain-text values.
 

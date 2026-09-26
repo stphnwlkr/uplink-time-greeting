@@ -8,7 +8,7 @@
     "icon": "clock",
     "description": "Display greetings, opening countdowns, and dates from a reusable seven-day schedule.",
     "keywords": ["time", "greeting", "date", "clock", "calendar"],
-    "textdomain": "uplink-time-greeting",
+    "textdomain": "uplink-hours-greetings",
     "supports": {
         "html": false,
         "customClassName": true,
