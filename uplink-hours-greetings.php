@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Uplink Hours & Greetings
- * Plugin URI: https://uplink.press/code/uplink-hours-greetings
+ * Plugin URI: https://plugins.uplink.press/articles/meet-uplink-hours-and-greetings/
  * Description: Weekly business schedules, live countdowns, greetings, and dates for blocks, Bricks, Etch, and shortcodes.
  * Version: 1.0.0
  * Author: Steve Walker
