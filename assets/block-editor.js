@@ -178,7 +178,7 @@
             el('div', blockProps,
                 el(Disabled, null,
                     el(ServerSideRender, {
-                        block: 'time-greeting-block/time-greeting',
+                        block: 'uplink-hours-greetings/hours-greetings',
                         attributes: attributes,
                         EmptyResponsePlaceholder: () => el(Placeholder, {
                             icon: 'clock',
@@ -195,7 +195,7 @@
     }
 
     // Register the block
-    registerBlockType('time-greeting-block/time-greeting', {
+    registerBlockType('uplink-hours-greetings/hours-greetings', {
         apiVersion: 3,
         title: __('Uplink Hours & Greetings', 'uplink-hours-greetings'),
         category: 'widgets',

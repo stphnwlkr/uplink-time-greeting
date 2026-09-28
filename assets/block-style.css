@@ -1,25 +1,25 @@
-.wp-block-time-greeting-block-time-greeting {
-    --tgb-greeting-font-weight: 500;
-    --tgb-date-font-style: normal;
+.wp-block-uplink-hours-greetings-hours-greetings {
+    --ulhgr-greeting-font-weight: 500;
+    --ulhgr-date-font-style: normal;
     line-height: inherit;
 }
 
-.wp-block-time-greeting-block-time-greeting .time-greeting {
-    font-weight: var(--tgb-greeting-font-weight);
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting {
+    font-weight: var(--ulhgr-greeting-font-weight);
 }
 
-.wp-block-time-greeting-block-time-greeting .time-greeting-date {
-    font-style: var(--tgb-date-font-style);
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting-date {
+    font-style: var(--ulhgr-date-font-style);
 }
 
-.wp-block-time-greeting-block-time-greeting.has-text-align-left { text-align: left; }
-.wp-block-time-greeting-block-time-greeting.has-text-align-center { text-align: center; }
-.wp-block-time-greeting-block-time-greeting.has-text-align-right { text-align: right; }
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-left { text-align: left; }
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-center { text-align: center; }
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-right { text-align: right; }
 
-.utg-schedule{--utg-schedule-gap:1.5rem;--utg-schedule-padding:.55rem;--utg-schedule-border:currentColor;width:100%;margin:0}
-.utg-schedule__day{display:grid;grid-template-columns:minmax(8ch,1fr) minmax(0,2fr);gap:var(--utg-schedule-gap);padding-block:var(--utg-schedule-padding);border-block-end:1px solid var(--utg-schedule-border)}
-.utg-schedule__name{font-weight:600}
-.utg-schedule__hours{margin:0;text-align:end}
-.utg-schedule__day--today .utg-schedule__name{font-weight:800}
-.utg-schedule__separator{margin-inline:.2em}
-.utg-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ulhgr-schedule{--ulhgr-schedule-gap:1.5rem;--ulhgr-schedule-padding:.55rem;--ulhgr-schedule-border:currentColor;width:100%;margin:0}
+.ulhgr-schedule__day{display:grid;grid-template-columns:minmax(8ch,1fr) minmax(0,2fr);gap:var(--ulhgr-schedule-gap);padding-block:var(--ulhgr-schedule-padding);border-block-end:1px solid var(--ulhgr-schedule-border)}
+.ulhgr-schedule__name{font-weight:600}
+.ulhgr-schedule__hours{margin:0;text-align:end}
+.ulhgr-schedule__day--today .ulhgr-schedule__name{font-weight:800}
+.ulhgr-schedule__separator{margin-inline:.2em}
+.ulhgr-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

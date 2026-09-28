@@ -2,47 +2,47 @@
  * Editor styles for Uplink Hours & Greetings
  */
 
-.wp-block-time-greeting-block-time-greeting {
+.wp-block-uplink-hours-greetings-hours-greetings {
     /* Editor-specific styles */
 }
 
-.wp-block-time-greeting-block-time-greeting .components-placeholder {
+.wp-block-uplink-hours-greetings-hours-greetings .components-placeholder {
     min-height: 60px;
 }
 
-.wp-block-time-greeting-block-time-greeting .components-placeholder .components-placeholder__label {
+.wp-block-uplink-hours-greetings-hours-greetings .components-placeholder .components-placeholder__label {
     margin-bottom: 8px;
 }
 
 /* Preview styling in editor */
-.wp-block-time-greeting-block-time-greeting .time-greeting,
-.wp-block-time-greeting-block-time-greeting .time-greeting-date {
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting,
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting-date {
     display: inline-block;
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
 }
 
-.wp-block-time-greeting-block-time-greeting .time-greeting {
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting {
     font-weight: 500;
     margin-right: 0.5em;
 }
 
-.wp-block-time-greeting-block-time-greeting .time-greeting-date {
+.wp-block-uplink-hours-greetings-hours-greetings .time-greeting-date {
     font-style: italic;
     opacity: 0.9;
 }
 
 /* Alignment support */
-.wp-block-time-greeting-block-time-greeting.has-text-align-left {
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-left {
     text-align: left;
 }
 
-.wp-block-time-greeting-block-time-greeting.has-text-align-center {
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-center {
     text-align: center;
 }
 
-.wp-block-time-greeting-block-time-greeting.has-text-align-right {
+.wp-block-uplink-hours-greetings-hours-greetings.has-text-align-right {
     text-align: right;
 }
 
@@ -55,18 +55,18 @@
 }
 
 /* Server side render loading state */
-.wp-block-time-greeting-block-time-greeting .components-placeholder {
+.wp-block-uplink-hours-greetings-hours-greetings .components-placeholder {
     background: #f0f0f0;
     border: 1px dashed #ddd;
     border-radius: 4px;
 }
 
-.wp-block-time-greeting-block-time-greeting .components-placeholder .dashicon {
+.wp-block-uplink-hours-greetings-hours-greetings .components-placeholder .dashicon {
     color: #8f98a1;
 }
 
 /* Make sure the preview looks good in the editor */
-.wp-block-time-greeting-block-time-greeting [data-wp-c16t] {
+.wp-block-uplink-hours-greetings-hours-greetings [data-wp-c16t] {
     opacity: 1;
 }
 

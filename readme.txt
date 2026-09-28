@@ -20,15 +20,11 @@ The WordPress block and shortcode render semantic, styleable weekly hours and re
 
 Administrators can grant update access to additional roles or individual users in the Permissions tab. Administrator access is always retained.
 
-Existing Time Greeting Block content keeps working after you deactivate that plugin and activate this one. On first activation, this plugin copies its saved settings without removing the old data.
-
 == Installation ==
 
 1. Upload and activate Uplink Hours & Greetings.
 2. Open Settings > Uplink Hours & Greetings > Weekly schedule to assign daily schedules and write messages. Expand a day to assign or customize its schedule.
 3. Add the block, a builder dynamic tag, or a shortcode to a page.
-
-If you are moving from Time Greeting Block, deactivate it before activating Uplink Hours & Greetings.
 
 == Frequently Asked Questions ==
 
@@ -42,15 +38,15 @@ Mark an entry as Opening. Use {opening_countdown} in an earlier message. {countd
 
 = How do I use it in Bricks? =
 
-For a custom layout, enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements with {utg_day} and {utg_hours}; {utg_state}, {utg_key}, and {utg_today} are also available inside the loop. The query follows WordPress's Week Starts On setting and includes closed days. For semantic hours, place the loop's Div inside a dl and set the day and hours child HTML tags to dt and dd. A Shortcode element with [time_greeting display="schedule"] provides ready-made semantic output. Insert {tgb_greeting}, {tgb_date}, {tgb_both}, or {tgb_schedule} in a dynamic text field for inline text. Use [time_greeting] in a Shortcode element for a live countdown.
+For a custom layout, enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements with {ulhgr_day} and {ulhgr_hours}; {ulhgr_state}, {ulhgr_key}, and {ulhgr_today} are also available inside the loop. The query follows WordPress's Week Starts On setting and includes closed days. For semantic hours, place the loop's Div inside a dl and set the day and hours child HTML tags to dt and dd. A Shortcode element with [uplink_hours_greetings display="schedule"] provides ready-made semantic output. Insert {ulhgr_greeting}, {ulhgr_date}, {ulhgr_both}, or {ulhgr_schedule} in a dynamic text field for inline text. Use [uplink_hours_greetings] in a Shortcode element for a live countdown.
 
 = How do I use it in Etch? =
 
-Loop over {options.time_greeting.week} to build a schedule with your own semantic HTML and classes. Every day includes its key, number, name, state, today flag, text hours, and opening/closing windows. Direct data also includes greeting, date, both, schedule, timezone, timezone_abbr, now, current, next, opening, and days. The plugin's How to Use tab lists every path and window field. Use a shortcode-capable element for a live countdown or the ready-made schedule markup.
+Loop over {options.uplink_hours_greetings.week} to build a schedule with your own semantic HTML and classes. Every day includes its key, number, name, state, today flag, text hours, and opening/closing windows. Direct data also includes greeting, date, both, schedule, timezone, timezone_abbr, now, current, next, opening, and days. The plugin's How to Use tab lists every path and window field. Use a shortcode-capable element for a live countdown or the ready-made schedule markup.
 
 = Is there a shortcode? =
 
-Yes. Use [time_greeting], [time_greeting display="date"], [time_greeting display="both"], or [time_greeting display="schedule"]. The shortcode also accepts date_format, timezone, and tz_abbr.
+Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="date"], [uplink_hours_greetings display="both"], or [uplink_hours_greetings display="schedule"]. The shortcode also accepts date_format, timezone, and tz_abbr.
 
 == Changelog ==
 

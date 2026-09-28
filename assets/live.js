@@ -2,7 +2,7 @@
     'use strict';
 
     const i18n = window.wp && window.wp.i18n;
-    if (!i18n || !window.utgLive) {
+    if (!i18n || !window.ulhgrLive) {
         return;
     }
 
@@ -29,17 +29,17 @@
     }
 
     async function refresh(root) {
-        if (root.dataset.utgRefreshing === '1') {
+        if (root.dataset.ulhgrRefreshing === '1') {
             return;
         }
-        root.dataset.utgRefreshing = '1';
+        root.dataset.ulhgrRefreshing = '1';
         try {
-            const url = new URL(window.utgLive.restUrl);
-            url.searchParams.set('display', root.dataset.utgDisplay || 'greeting');
-            url.searchParams.set('date_format', root.dataset.utgDateFormat || 'F j, Y');
-            url.searchParams.set('timezone', root.dataset.utgTimezone || '');
-            url.searchParams.set('tz_abbr', root.dataset.utgTzAbbr || '');
-            url.searchParams.set('_utg', String(Date.now()));
+            const url = new URL(window.ulhgrLive.restUrl);
+            url.searchParams.set('display', root.dataset.ulhgrDisplay || 'greeting');
+            url.searchParams.set('date_format', root.dataset.ulhgrDateFormat || 'F j, Y');
+            url.searchParams.set('timezone', root.dataset.ulhgrTimezone || '');
+            url.searchParams.set('tz_abbr', root.dataset.ulhgrTzAbbr || '');
+            url.searchParams.set('_ulhgr', String(Date.now()));
             const response = await fetch(url.toString(), { cache: 'no-store', credentials: 'same-origin' });
             if (!response.ok) {
                 throw new Error('Could not refresh greeting');
@@ -51,24 +51,24 @@
             const template = document.createElement('template');
             template.innerHTML = data.html;
             const replacement = template.content.firstElementChild;
-            if (replacement && replacement.classList.contains('utg-output')) {
+            if (replacement && replacement.classList.contains('ulhgr-output')) {
                 root.replaceWith(replacement);
             }
         } catch (error) {
-            root.dataset.utgRefreshing = '0';
+            root.dataset.ulhgrRefreshing = '0';
         }
     }
 
     function tick() {
         const now = Date.now();
-        document.querySelectorAll('.utg-output[data-utg-transition]').forEach(function (root) {
-            const transition = Number(root.dataset.utgTransition);
+        document.querySelectorAll('.ulhgr-output[data-ulhgr-transition]').forEach(function (root) {
+            const transition = Number(root.dataset.ulhgrTransition);
             if (transition && now >= transition) {
                 refresh(root);
                 return;
             }
-            root.querySelectorAll('.utg-countdown[data-utg-target]').forEach(function (countdown) {
-                const target = Number(countdown.dataset.utgTarget);
+            root.querySelectorAll('.ulhgr-countdown[data-ulhgr-target]').forEach(function (countdown) {
+                const target = Number(countdown.dataset.ulhgrTarget);
                 if (target && target > now) {
                     countdown.textContent = duration(target - now);
                 }

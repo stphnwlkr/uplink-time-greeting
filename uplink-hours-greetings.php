@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Uplink Hours & Greetings
+ * Plugin URI: https://uplink.press/code/uplink-hours-greetings
  * Description: Weekly business schedules, live countdowns, greetings, and dates for blocks, Bricks, Etch, and shortcodes.
  * Version: 1.0.0
- * Author: Stephen Walker
- * Author URI: https://flyingw.co
+ * Author: Steve Walker
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: uplink-hours-greetings
@@ -21,8 +21,8 @@ if (!defined('ABSPATH')) {
 define('UPLINK_HOURS_GREETINGS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('UPLINK_HOURS_GREETINGS_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('UPLINK_HOURS_GREETINGS_PLUGIN_VERSION', '1.0.0');
-define('UPLINK_HOURS_GREETINGS_OPTION_NAME', 'utg_settings');
-define('UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION', 'utg_permissions');
+define('UPLINK_HOURS_GREETINGS_OPTION_NAME', 'ulhgr_settings');
+define('UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION', 'ulhgr_permissions');
 
 /**
  * Main plugin class
@@ -43,7 +43,7 @@ class Uplink_Hours_Greetings_Plugin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'admin_init'));
         add_filter('map_meta_cap', array($this, 'map_settings_capability'), 10, 4);
-        add_filter('option_page_capability_tgb_settings_group', array($this, 'settings_capability'));
+        add_filter('option_page_capability_ulhgr_settings_group', array($this, 'settings_capability'));
         add_filter('etch/dynamic_data/option', array($this, 'etch_data'));
         add_filter('bricks/dynamic_tags_list', array($this, 'bricks_tags'));
         add_filter('bricks/setup/control_options', array($this, 'bricks_query_options'));
@@ -54,10 +54,10 @@ class Uplink_Hours_Greetings_Plugin {
         add_action('admin_enqueue_scripts', array($this, 'admin_assets'));
         add_action('wp_enqueue_scripts', array($this, 'frontend_assets'));
         add_action('rest_api_init', array($this, 'register_rest_routes'));
-        add_action('admin_head-settings_page_time-greeting-settings', array($this, 'capture_admin_feedback'), 0);
+        add_action('admin_head-settings_page_uplink-hours-greetings', array($this, 'capture_admin_feedback'), 0);
 
         // Register shortcode
-        add_shortcode('time_greeting', array($this, 'shortcode_handler'));
+        add_shortcode('uplink_hours_greetings', array($this, 'shortcode_handler'));
 
         // Plugin activation/deactivation hooks
         register_activation_hook(__FILE__, array($this, 'activate'));
@@ -80,10 +80,10 @@ class Uplink_Hours_Greetings_Plugin {
             update_option(UPLINK_HOURS_GREETINGS_OPTION_NAME, $stored_settings);
         }
 
-        wp_register_script('tgb-editor', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/block-editor.js', array(
+        wp_register_script('ulhgr-editor', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/block-editor.js', array(
             'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'
         ), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
-        wp_set_script_translations('tgb-editor', 'uplink-hours-greetings');
+        wp_set_script_translations('ulhgr-editor', 'uplink-hours-greetings');
         // Register the block using block.json
         if (function_exists('register_block_type')) {
             register_block_type(__DIR__, array(
@@ -109,17 +109,9 @@ class Uplink_Hours_Greetings_Plugin {
             'activation_date' => current_time('mysql')
         );
 
-        // Only add options if they don't exist (prevents overwriting on reactivation)
+        // Only add options if they do not exist, so reactivation keeps saved settings.
         if (false === get_option(UPLINK_HOURS_GREETINGS_OPTION_NAME, false)) {
-            $legacy_options = get_option('tgb_settings', array());
-            $initial_options = is_array($legacy_options) && !empty($legacy_options)
-                ? wp_parse_args($legacy_options, $default_options)
-                : $default_options;
-            if (!empty($legacy_options) && is_array($legacy_options)) {
-                $initial_options['profiles'][0]['intervals'] = $this->legacy_intervals($legacy_options);
-            }
-            $initial_options['plugin_version'] = UPLINK_HOURS_GREETINGS_PLUGIN_VERSION;
-            add_option(UPLINK_HOURS_GREETINGS_OPTION_NAME, $initial_options);
+            add_option(UPLINK_HOURS_GREETINGS_OPTION_NAME, $default_options);
         }
 
         // Update version if different
@@ -307,7 +299,7 @@ class Uplink_Hours_Greetings_Plugin {
             'date_format' => 'F j, Y',
             'timezone' => '',
             'tz_abbr' => ''
-        ), $atts, 'time_greeting');
+        ), $atts, 'uplink_hours_greetings');
 
         // Convert to camelCase for consistency with block attributes
         $normalized_attrs = array(
@@ -433,7 +425,7 @@ class Uplink_Hours_Greetings_Plugin {
             ? DateTimeImmutable::createFromMutable($datetime)->modify('tomorrow')->setTime(0, 0)->getTimestamp()
             : $this->next_interval($datetime, $settings)['timestamp'];
         return sprintf(
-            '<span class="utg-output" data-utg-display="%s" data-utg-date-format="%s" data-utg-timezone="%s" data-utg-tz-abbr="%s" data-utg-transition="%d">%s</span>',
+            '<span class="ulhgr-output" data-ulhgr-display="%s" data-ulhgr-date-format="%s" data-ulhgr-timezone="%s" data-ulhgr-tz-abbr="%s" data-ulhgr-transition="%d">%s</span>',
             esc_attr($display),
             esc_attr($date_format),
             esc_attr($timezone),
@@ -533,7 +525,7 @@ class Uplink_Hours_Greetings_Plugin {
 
     private function countdown_markup($target, $now) {
         return sprintf(
-            '<span class="utg-countdown" data-utg-target="%1$d">%2$s</span>',
+            '<span class="ulhgr-countdown" data-ulhgr-target="%1$d">%2$s</span>',
             (int) $target * 1000,
             esc_html($this->format_duration($target - $now))
         );
@@ -657,27 +649,27 @@ class Uplink_Hours_Greetings_Plugin {
                 $today = (int) $preview->format('w');
             }
         }
-        $html = '<dl class="utg-schedule" aria-label="' . esc_attr__('Weekly business hours', 'uplink-hours-greetings') . '">';
+        $html = '<dl class="ulhgr-schedule" aria-label="' . esc_attr__('Weekly business hours', 'uplink-hours-greetings') . '">';
         foreach ($this->schedule_rows() as $row) {
-            $html .= '<div class="utg-schedule__day utg-schedule__day--' . esc_attr($row['state']) . ($row['number'] === $today ? ' utg-schedule__day--today' : '') . '" data-day="' . esc_attr($row['key']) . '" data-state="' . esc_attr($row['state']) . '">';
-            $html .= '<dt class="utg-schedule__name">' . esc_html($row['day']) . '</dt><dd class="utg-schedule__hours">';
+            $html .= '<div class="ulhgr-schedule__day ulhgr-schedule__day--' . esc_attr($row['state']) . ($row['number'] === $today ? ' ulhgr-schedule__day--today' : '') . '" data-day="' . esc_attr($row['key']) . '" data-state="' . esc_attr($row['state']) . '">';
+            $html .= '<dt class="ulhgr-schedule__name">' . esc_html($row['day']) . '</dt><dd class="ulhgr-schedule__hours">';
             if (!$row['windows']) {
-                $html .= '<span class="utg-schedule__status">' . esc_html($row['hours']) . '</span>';
+                $html .= '<span class="ulhgr-schedule__status">' . esc_html($row['hours']) . '</span>';
             } else {
                 foreach ($row['windows'] as $index => $window) {
                     if ($index) {
-                        $html .= '<span class="utg-schedule__between">, </span>';
+                        $html .= '<span class="ulhgr-schedule__between">, </span>';
                     }
-                    $html .= '<span class="utg-schedule__interval"' . ($window['overnight'] ? ' data-overnight="true"' : '') . '>';
+                    $html .= '<span class="ulhgr-schedule__interval"' . ($window['overnight'] ? ' data-overnight="true"' : '') . '>';
                     if ('' === $window['end']) {
-                        $html .= '<span class="utg-schedule__from">' . esc_html__('From', 'uplink-hours-greetings') . ' </span>';
+                        $html .= '<span class="ulhgr-schedule__from">' . esc_html__('From', 'uplink-hours-greetings') . ' </span>';
                     }
-                    $html .= '<time class="utg-schedule__opens" datetime="' . esc_attr($window['start']) . '">' . esc_html($window['start_label']) . '</time>';
+                    $html .= '<time class="ulhgr-schedule__opens" datetime="' . esc_attr($window['start']) . '">' . esc_html($window['start_label']) . '</time>';
                     if ('' !== $window['end']) {
-                        $html .= '<span class="utg-schedule__separator" aria-hidden="true">–</span><span class="utg-visually-hidden">' . esc_html__(' to ', 'uplink-hours-greetings') . '</span>';
-                        $html .= '<time class="utg-schedule__closes" datetime="' . esc_attr($window['end']) . '">' . esc_html($window['end_label']) . '</time>';
+                        $html .= '<span class="ulhgr-schedule__separator" aria-hidden="true">–</span><span class="ulhgr-visually-hidden">' . esc_html__(' to ', 'uplink-hours-greetings') . '</span>';
+                        $html .= '<time class="ulhgr-schedule__closes" datetime="' . esc_attr($window['end']) . '">' . esc_html($window['end_label']) . '</time>';
                         if ($window['overnight']) {
-                            $html .= '<span class="utg-visually-hidden">' . esc_html__(' next day', 'uplink-hours-greetings') . '</span>';
+                            $html .= '<span class="ulhgr-visually-hidden">' . esc_html__(' next day', 'uplink-hours-greetings') . '</span>';
                         }
                     }
                     $html .= '</span>';
@@ -722,7 +714,7 @@ class Uplink_Hours_Greetings_Plugin {
             $row['is_today'] = $row['number'] === (int) $now->format('w');
         }
         unset($row);
-        $data['time_greeting'] = array(
+        $data['uplink_hours_greetings'] = array(
             'greeting' => $this->plain_value('greeting'),
             'date' => $this->plain_value('date'),
             'both' => $this->plain_value('both'),
@@ -774,7 +766,7 @@ class Uplink_Hours_Greetings_Plugin {
             'schedule' => __('Weekly schedule', 'uplink-hours-greetings'),
         ) as $key => $label) {
             $tags[] = array(
-                'name' => '{tgb_' . $key . '}',
+                'name' => '{ulhgr_' . $key . '}',
                 'label' => $label,
                 'group' => __('Uplink Hours & Greetings', 'uplink-hours-greetings'),
             );
@@ -786,19 +778,19 @@ class Uplink_Hours_Greetings_Plugin {
             'key' => __('Schedule day key', 'uplink-hours-greetings'),
             'today' => __('Schedule is today (1 or 0)', 'uplink-hours-greetings'),
         ) as $key => $label) {
-            $tags[] = array('name' => '{utg_' . $key . '}', 'label' => $label, 'group' => __('Uplink Hours & Greetings', 'uplink-hours-greetings'));
+            $tags[] = array('name' => '{ulhgr_' . $key . '}', 'label' => $label, 'group' => __('Uplink Hours & Greetings', 'uplink-hours-greetings'));
         }
         return $tags;
     }
 
     /** Expose the ordered seven-day schedule as a native Bricks Query Loop source. */
     public function bricks_query_options($options) {
-        $options['queryTypes']['utg_schedule'] = __('Uplink Weekly Schedule', 'uplink-hours-greetings');
+        $options['queryTypes']['ulhgr_schedule'] = __('Uplink Weekly Schedule', 'uplink-hours-greetings');
         return $options;
     }
 
     public function bricks_schedule_query($results, $query) {
-        if (!is_object($query) || !isset($query->object_type) || 'utg_schedule' !== $query->object_type) {
+        if (!is_object($query) || !isset($query->object_type) || 'ulhgr_schedule' !== $query->object_type) {
             return $results;
         }
         $rows = $this->schedule_rows();
@@ -811,7 +803,7 @@ class Uplink_Hours_Greetings_Plugin {
     }
 
     private function bricks_schedule_field($key) {
-        if (!class_exists('\\Bricks\\Query') || 'utg_schedule' !== \Bricks\Query::get_query_object_type()) {
+        if (!class_exists('\\Bricks\\Query') || 'ulhgr_schedule' !== \Bricks\Query::get_query_object_type()) {
             return null;
         }
         $row = \Bricks\Query::get_loop_object();
@@ -829,37 +821,37 @@ class Uplink_Hours_Greetings_Plugin {
             return $tag;
         }
         $key = trim($tag, '{}');
-        if (in_array($key, array('utg_day', 'utg_hours', 'utg_state', 'utg_key', 'utg_today'), true)) {
-            $value = $this->bricks_schedule_field(substr($key, 4));
+        if (in_array($key, array('ulhgr_day', 'ulhgr_hours', 'ulhgr_state', 'ulhgr_key', 'ulhgr_today'), true)) {
+            $value = $this->bricks_schedule_field(substr($key, 6));
             return null === $value ? $tag : esc_html($value);
         }
-        if (!in_array($key, array('tgb_greeting', 'tgb_date', 'tgb_both', 'tgb_schedule'), true)) {
+        if (!in_array($key, array('ulhgr_greeting', 'ulhgr_date', 'ulhgr_both', 'ulhgr_schedule'), true)) {
             return $tag;
         }
-        return esc_html($this->plain_value(substr($key, 4)));
+        return esc_html($this->plain_value(substr($key, 6)));
     }
 
     public function bricks_render_content($content, $post = null, $context = 'text') {
-        if (!is_string($content) || (false === strpos($content, '{tgb_') && false === strpos($content, '{utg_'))) {
+        if (!is_string($content) || false === strpos($content, '{ulhgr_')) {
             return $content;
         }
         foreach (array('day', 'hours', 'state', 'key', 'today') as $key) {
             $value = $this->bricks_schedule_field($key);
             if (null !== $value) {
-                $content = str_replace('{utg_' . $key . '}', esc_html($value), $content);
+                $content = str_replace('{ulhgr_' . $key . '}', esc_html($value), $content);
             }
         }
         foreach (array('greeting', 'date', 'both', 'schedule') as $key) {
-            $content = str_replace('{tgb_' . $key . '}', esc_html($this->plain_value($key)), $content);
+            $content = str_replace('{ulhgr_' . $key . '}', esc_html($this->plain_value($key)), $content);
         }
         return $content;
     }
 
     public function admin_assets($hook) {
-        if ('settings_page_time-greeting-settings' === $hook) {
-            wp_enqueue_style('tgb-admin', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/admin.css', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION);
-            wp_enqueue_script('tgb-admin', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/admin.js', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
-            wp_localize_script('tgb-admin', 'utgAdmin', array(
+        if ('settings_page_uplink-hours-greetings' === $hook) {
+            wp_enqueue_style('ulhgr-admin', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/admin.css', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION);
+            wp_enqueue_script('ulhgr-admin', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/admin.js', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
+            wp_localize_script('ulhgr-admin', 'ulhgrAdmin', array(
                 'newSchedule' => __('New schedule', 'uplink-hours-greetings'),
                 /* translators: %s: weekday name for a copied schedule. */
                 'daySchedule' => __('%s schedule', 'uplink-hours-greetings'),
@@ -876,10 +868,10 @@ class Uplink_Hours_Greetings_Plugin {
     }
 
     private function enqueue_live_assets() {
-        wp_enqueue_style('utg-output', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/block-style.css', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION);
-        wp_enqueue_script('utg-live', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/live.js', array('wp-i18n'), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
-        wp_set_script_translations('utg-live', 'uplink-hours-greetings');
-        wp_localize_script('utg-live', 'utgLive', array(
+        wp_enqueue_style('ulhgr-output', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/block-style.css', array(), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION);
+        wp_enqueue_script('ulhgr-live', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/live.js', array('wp-i18n'), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
+        wp_set_script_translations('ulhgr-live', 'uplink-hours-greetings');
+        wp_localize_script('ulhgr-live', 'ulhgrLive', array(
             'restUrl' => esc_url_raw(rest_url('uplink-hours-greetings/v1/render')),
         ));
     }
@@ -899,7 +891,7 @@ class Uplink_Hours_Greetings_Plugin {
             'timezone' => sanitize_text_field($request->get_param('timezone') ?: ''),
             'tzAbbr' => sanitize_text_field($request->get_param('tz_abbr') ?: ''),
         );
-        if (current_user_can('utg_manage_settings') && $request->get_param('at')) {
+        if (current_user_can('ulhgr_manage_settings') && $request->get_param('at')) {
             $attributes['previewAt'] = sanitize_text_field($request->get_param('at'));
         }
         return rest_ensure_response(array('html' => $this->generate_greeting($attributes)));
@@ -931,8 +923,8 @@ class Uplink_Hours_Greetings_Plugin {
         add_options_page(
             __('Uplink Hours & Greetings Settings', 'uplink-hours-greetings'),
             __('Uplink Hours & Greetings', 'uplink-hours-greetings'),
-            'utg_manage_settings',
-            'time-greeting-settings',
+            'ulhgr_manage_settings',
+            'uplink-hours-greetings',
             array($this, 'admin_page')
         );
     }
@@ -942,24 +934,24 @@ class Uplink_Hours_Greetings_Plugin {
      */
     public function admin_init() {
         register_setting(
-            'tgb_settings_group',
+            'ulhgr_settings_group',
             UPLINK_HOURS_GREETINGS_OPTION_NAME,
             array($this, 'sanitize_settings')
         );
         register_setting(
-            'tgb_permissions_group',
+            'ulhgr_permissions_group',
             UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION,
             array($this, 'sanitize_permissions')
         );
     }
 
     public function settings_capability() {
-        return 'utg_manage_settings';
+        return 'ulhgr_manage_settings';
     }
 
     /** Administrators and the selected roles or users may edit plugin settings. */
     public function map_settings_capability($caps, $cap, $user_id, $args) {
-        if ('utg_manage_settings' !== $cap) {
+        if ('ulhgr_manage_settings' !== $cap) {
             return $caps;
         }
         $user = get_userdata($user_id);
@@ -1129,7 +1121,7 @@ class Uplink_Hours_Greetings_Plugin {
      * Admin page with tabbed interface
      */
     public function admin_page() {
-        if (!current_user_can('utg_manage_settings')) {
+        if (!current_user_can('ulhgr_manage_settings')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'uplink-hours-greetings'));
         }
 
@@ -1150,11 +1142,11 @@ class Uplink_Hours_Greetings_Plugin {
         }
 
         ?>
-        <div class="wrap tgb-admin" data-view="<?php echo esc_attr($current_tab); ?>">
-            <div class="tgb-admin-header">
-                <div class="tgb-header-icon" aria-hidden="true"><img src="<?php echo esc_url(UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/uplink-mark.svg'); ?>" alt=""></div>
-                <div><p class="tgb-eyebrow"><?php esc_html_e('UPLINK · SETTINGS', 'uplink-hours-greetings'); ?></p><h1><?php esc_html_e('Hours & Greetings', 'uplink-hours-greetings'); ?></h1><p><?php esc_html_e('Set what visitors see throughout your week.', 'uplink-hours-greetings'); ?></p></div>
-                <span class="tgb-version"><?php echo esc_html('v' . UPLINK_HOURS_GREETINGS_PLUGIN_VERSION); ?></span>
+        <div class="wrap ulhgr-admin" data-view="<?php echo esc_attr($current_tab); ?>">
+            <div class="ulhgr-admin-header">
+                <div class="ulhgr-header-icon" aria-hidden="true"><img src="<?php echo esc_url(UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/uplink-mark.svg'); ?>" alt=""></div>
+                <div><p class="ulhgr-eyebrow"><?php esc_html_e('UPLINK · SETTINGS', 'uplink-hours-greetings'); ?></p><h1><?php esc_html_e('Hours & Greetings', 'uplink-hours-greetings'); ?></h1><p><?php esc_html_e('Set what visitors see throughout your week.', 'uplink-hours-greetings'); ?></p></div>
+                <span class="ulhgr-version"><?php echo esc_html('v' . UPLINK_HOURS_GREETINGS_PLUGIN_VERSION); ?></span>
             </div>
 
             <?php if (!empty($this->admin_feedback)) : ?>
@@ -1167,19 +1159,19 @@ class Uplink_Hours_Greetings_Plugin {
                     }
                 }
                 ?>
-                <div class="tgb-toast <?php echo $has_error ? 'tgb-toast-error' : 'tgb-toast-success'; ?>" role="<?php echo $has_error ? 'alert' : 'status'; ?>" aria-live="<?php echo $has_error ? 'assertive' : 'polite'; ?>">
+                <div class="ulhgr-toast <?php echo $has_error ? 'ulhgr-toast-error' : 'ulhgr-toast-success'; ?>" role="<?php echo $has_error ? 'alert' : 'status'; ?>" aria-live="<?php echo $has_error ? 'assertive' : 'polite'; ?>">
                     <span class="dashicons <?php echo $has_error ? 'dashicons-warning' : 'dashicons-yes-alt'; ?>" aria-hidden="true"></span>
-                    <div class="tgb-toast-messages">
+                    <div class="ulhgr-toast-messages">
                         <?php foreach ($this->admin_feedback as $feedback) : ?>
                             <p><?php echo esc_html(wp_strip_all_tags($feedback['message'])); ?></p>
                         <?php endforeach; ?>
                     </div>
-                    <button type="button" class="tgb-toast-close" aria-label="<?php esc_attr_e('Dismiss notification', 'uplink-hours-greetings'); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                    <button type="button" class="ulhgr-toast-close" aria-label="<?php esc_attr_e('Dismiss notification', 'uplink-hours-greetings'); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </div>
             <?php endif; ?>
 
             <!-- Tab Navigation -->
-            <nav class="tgb-tabs" role="tablist" aria-orientation="horizontal" aria-label="<?php esc_attr_e('Uplink Hours & Greetings sections', 'uplink-hours-greetings'); ?>">
+            <nav class="ulhgr-tabs" role="tablist" aria-orientation="horizontal" aria-label="<?php esc_attr_e('Uplink Hours & Greetings sections', 'uplink-hours-greetings'); ?>">
                 <?php
                 $tabs = array(
                     'overview' => __('Overview', 'uplink-hours-greetings'),
@@ -1190,9 +1182,9 @@ class Uplink_Hours_Greetings_Plugin {
                 }
                 $tabs['how-to'] = __('How to Use', 'uplink-hours-greetings');
                 foreach ($tabs as $tab_key => $tab_label) {
-                    $tab_url = add_query_arg(array('tab' => $tab_key), admin_url('options-general.php?page=time-greeting-settings'));
+                    $tab_url = add_query_arg(array('tab' => $tab_key), admin_url('options-general.php?page=uplink-hours-greetings'));
                     printf(
-                        '<a id="utg-tab-%1$s" href="%2$s" class="%3$s" role="tab" aria-controls="utg-panel-%1$s" aria-selected="%4$s" tabindex="%5$s" data-utg-tab="%1$s">%6$s</a>',
+                        '<a id="ulhgr-tab-%1$s" href="%2$s" class="%3$s" role="tab" aria-controls="ulhgr-panel-%1$s" aria-selected="%4$s" tabindex="%5$s" data-ulhgr-tab="%1$s">%6$s</a>',
                         esc_attr($tab_key),
                         esc_url($tab_url),
                         esc_attr($current_tab === $tab_key ? 'is-active' : ''),
@@ -1204,12 +1196,12 @@ class Uplink_Hours_Greetings_Plugin {
                 ?>
             </nav>
 
-            <div class="tgb-tab-content">
+            <div class="ulhgr-tab-content">
                 <?php $this->render_settings_tabs($current_tab); ?>
                 <?php if (current_user_can('manage_options')) : ?>
-                    <section id="utg-panel-permissions" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-permissions" data-utg-panel="permissions"<?php echo 'permissions' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_permissions_tab(); ?></section>
+                    <section id="ulhgr-panel-permissions" class="ulhgr-tab-panel" role="tabpanel" aria-labelledby="ulhgr-tab-permissions" data-ulhgr-panel="permissions"<?php echo 'permissions' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_permissions_tab(); ?></section>
                 <?php endif; ?>
-                <section id="utg-panel-how-to" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-how-to" data-utg-panel="how-to"<?php echo 'how-to' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_how_to_tab(); ?></section>
+                <section id="ulhgr-panel-how-to" class="ulhgr-tab-panel" role="tabpanel" aria-labelledby="ulhgr-tab-how-to" data-ulhgr-panel="how-to"<?php echo 'how-to' === $current_tab ? '' : ' hidden'; ?>><?php $this->render_how_to_tab(); ?></section>
             </div>
         </div>
 
@@ -1234,35 +1226,35 @@ class Uplink_Hours_Greetings_Plugin {
             6 => __('Saturday', 'uplink-hours-greetings'),
         );
         ?>
-        <form method="post" action="options.php" class="tgb-settings-form">
-            <?php settings_fields('tgb_settings_group'); ?>
-            <section id="utg-panel-schedule" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-schedule" data-utg-panel="schedule"<?php echo 'schedule' === $current_tab ? '' : ' hidden'; ?>>
-            <section class="tgb-panel utg-schedule-panel">
-                <div class="tgb-panel-heading">
-                    <div><p class="tgb-overline"><?php esc_html_e('SEVEN-DAY SCHEDULE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Assign a schedule to each day', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Reuse one schedule across several days. Copy it when one day needs different hours or messages.', 'uplink-hours-greetings'); ?></p></div>
+        <form method="post" action="options.php" class="ulhgr-settings-form">
+            <?php settings_fields('ulhgr_settings_group'); ?>
+            <section id="ulhgr-panel-schedule" class="ulhgr-tab-panel" role="tabpanel" aria-labelledby="ulhgr-tab-schedule" data-ulhgr-panel="schedule"<?php echo 'schedule' === $current_tab ? '' : ' hidden'; ?>>
+            <section class="ulhgr-panel ulhgr-schedule-panel">
+                <div class="ulhgr-panel-heading">
+                    <div><p class="ulhgr-overline"><?php esc_html_e('SEVEN-DAY SCHEDULE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Assign a schedule to each day', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Reuse one schedule across several days. Copy it when one day needs different hours or messages.', 'uplink-hours-greetings'); ?></p></div>
                 </div>
-                <div class="utg-week-grid">
+                <div class="ulhgr-week-grid">
                     <?php $week_start = (int) get_option('start_of_week', 0); ?>
                     <?php for ($offset = 0; $offset < 7; $offset++) : $day = ($week_start + $offset) % 7; ?>
-                    <details class="utg-day-row" data-day="<?php echo esc_attr($day); ?>">
-                        <summary><strong><?php echo esc_html($days[$day]); ?></strong><span class="utg-day-summary"><?php echo esc_html($settings['profiles'][array_search($settings['week'][$day], array_column($settings['profiles'], 'id'), true)]['name'] ?? ''); ?></span></summary>
-                        <div class="utg-day-controls"><label for="utg-day-<?php echo esc_attr($day); ?>"><?php esc_html_e('Schedule', 'uplink-hours-greetings'); ?></label>
-                        <select id="utg-day-<?php echo esc_attr($day); ?>" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[week][' . $day . ']'); ?>" class="utg-day-profile">
+                    <details class="ulhgr-day-row" data-day="<?php echo esc_attr($day); ?>">
+                        <summary><strong><?php echo esc_html($days[$day]); ?></strong><span class="ulhgr-day-summary"><?php echo esc_html($settings['profiles'][array_search($settings['week'][$day], array_column($settings['profiles'], 'id'), true)]['name'] ?? ''); ?></span></summary>
+                        <div class="ulhgr-day-controls"><label for="ulhgr-day-<?php echo esc_attr($day); ?>"><?php esc_html_e('Schedule', 'uplink-hours-greetings'); ?></label>
+                        <select id="ulhgr-day-<?php echo esc_attr($day); ?>" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[week][' . $day . ']'); ?>" class="ulhgr-day-profile">
                             <?php foreach ($settings['profiles'] as $profile) : ?>
                             <option value="<?php echo esc_attr($profile['id']); ?>" <?php selected($settings['week'][$day], $profile['id']); ?>><?php echo esc_html($profile['name']); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="button" class="button utg-customize-day" data-day-name="<?php echo esc_attr($days[$day]); ?>"><?php esc_html_e('Customize this day', 'uplink-hours-greetings'); ?></button>
+                        <button type="button" class="button ulhgr-customize-day" data-day-name="<?php echo esc_attr($days[$day]); ?>"><?php esc_html_e('Customize this day', 'uplink-hours-greetings'); ?></button>
                         </div>
                     </details>
                     <?php endfor; ?>
                 </div>
             </section>
-            <section class="tgb-panel utg-schedule-panel">
-                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('REUSABLE DAILY SCHEDULES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Hours and messages', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Each entry begins at its start time and continues until the next entry, even across midnight. Mark an opening to count down to it from another day.', 'uplink-hours-greetings'); ?></p></div></div>
-                <div class="utg-token-guide" role="note" aria-labelledby="utg-token-guide-title">
-                    <div class="utg-token-guide-heading"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span><div><h3 id="utg-token-guide-title"><?php esc_html_e('Write dynamic messages', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Place these tokens in a message. They show the configured local time and upcoming schedule events.', 'uplink-hours-greetings'); ?></p></div></div>
-                    <ul class="utg-token-list">
+            <section class="ulhgr-panel ulhgr-schedule-panel">
+                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('REUSABLE DAILY SCHEDULES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Hours and messages', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Each entry begins at its start time and continues until the next entry, even across midnight. Mark an opening to count down to it from another day.', 'uplink-hours-greetings'); ?></p></div></div>
+                <div class="ulhgr-token-guide" role="note" aria-labelledby="ulhgr-token-guide-title">
+                    <div class="ulhgr-token-guide-heading"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span><div><h3 id="ulhgr-token-guide-title"><?php esc_html_e('Write dynamic messages', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Place these tokens in a message. They show the configured local time and upcoming schedule events.', 'uplink-hours-greetings'); ?></p></div></div>
+                    <ul class="ulhgr-token-list">
                         <li><code>{time}</code><span><?php esc_html_e('Current time', 'uplink-hours-greetings'); ?></span></li>
                         <li><code>{tz}</code><span><?php esc_html_e('Timezone', 'uplink-hours-greetings'); ?></span></li>
                         <li><code>{countdown}</code><span><?php esc_html_e('Until next entry', 'uplink-hours-greetings'); ?></span></li>
@@ -1271,54 +1263,54 @@ class Uplink_Hours_Greetings_Plugin {
                         <li><code>{opening_countdown}</code><span><?php esc_html_e('Until next opening', 'uplink-hours-greetings'); ?></span></li>
                         <li><code>{opening_time}</code><span><?php esc_html_e('Next opening time', 'uplink-hours-greetings'); ?></span></li>
                     </ul>
-                    <p class="utg-token-example"><strong><?php esc_html_e('Example', 'uplink-hours-greetings'); ?></strong> <span><?php esc_html_e('It’s {time}. We open in {opening_countdown}.', 'uplink-hours-greetings'); ?></span></p>
+                    <p class="ulhgr-token-example"><strong><?php esc_html_e('Example', 'uplink-hours-greetings'); ?></strong> <span><?php esc_html_e('It’s {time}. We open in {opening_countdown}.', 'uplink-hours-greetings'); ?></span></p>
                 </div>
-                <div class="utg-profiles">
+                <div class="ulhgr-profiles">
                     <?php foreach ($settings['profiles'] as $profile_index => $profile) : ?>
-                    <div class="utg-profile" data-profile-id="<?php echo esc_attr($profile['id']); ?>">
-                        <div class="utg-profile-heading">
-                            <div class="utg-profile-name"><label><?php esc_html_e('Schedule name', 'uplink-hours-greetings'); ?><input type="text" class="utg-profile-name-input" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][name]'); ?>" value="<?php echo esc_attr($profile['name']); ?>" maxlength="80" required></label><input type="hidden" class="utg-profile-id" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][id]'); ?>" value="<?php echo esc_attr($profile['id']); ?>"></div>
-                            <button type="button" class="button utg-remove-profile"><?php esc_html_e('Remove schedule', 'uplink-hours-greetings'); ?></button>
+                    <div class="ulhgr-profile" data-profile-id="<?php echo esc_attr($profile['id']); ?>">
+                        <div class="ulhgr-profile-heading">
+                            <div class="ulhgr-profile-name"><label><?php esc_html_e('Schedule name', 'uplink-hours-greetings'); ?><input type="text" class="ulhgr-profile-name-input" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][name]'); ?>" value="<?php echo esc_attr($profile['name']); ?>" maxlength="80" required></label><input type="hidden" class="ulhgr-profile-id" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][id]'); ?>" value="<?php echo esc_attr($profile['id']); ?>"></div>
+                            <button type="button" class="button ulhgr-remove-profile"><?php esc_html_e('Remove schedule', 'uplink-hours-greetings'); ?></button>
                         </div>
-                        <label class="tgb-checkbox-field utg-closed-field"><input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="0"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="1" <?php checked(!empty($profile['closed'])); ?>><?php esc_html_e('Closed all day', 'uplink-hours-greetings'); ?></label>
-                        <div class="utg-intervals">
+                        <label class="ulhgr-checkbox-field ulhgr-closed-field"><input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="0"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][closed]'); ?>" value="1" <?php checked(!empty($profile['closed'])); ?>><?php esc_html_e('Closed all day', 'uplink-hours-greetings'); ?></label>
+                        <div class="ulhgr-intervals">
                             <?php foreach ($profile['intervals'] as $row_index => $interval) : ?>
                                 <?php $this->render_interval_row($profile_index, $row_index, $interval); ?>
                             <?php endforeach; ?>
                         </div>
-                        <button type="button" class="button utg-add-interval"><?php esc_html_e('Add time entry', 'uplink-hours-greetings'); ?></button>
+                        <button type="button" class="button ulhgr-add-interval"><?php esc_html_e('Add time entry', 'uplink-hours-greetings'); ?></button>
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <button type="button" class="button utg-add-profile"><?php esc_html_e('Add reusable schedule', 'uplink-hours-greetings'); ?></button>
+                <button type="button" class="button ulhgr-add-profile"><?php esc_html_e('Add reusable schedule', 'uplink-hours-greetings'); ?></button>
             </section>
-            <div class="tgb-save-row"><?php submit_button(__('Save schedule', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
+            <div class="ulhgr-save-row"><?php submit_button(__('Save schedule', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
             </section>
-            <section id="utg-panel-overview" class="tgb-tab-panel" role="tabpanel" aria-labelledby="utg-tab-overview" data-utg-panel="overview"<?php echo 'overview' === $current_tab ? '' : ' hidden'; ?>>
-            <section class="tgb-panel utg-overview-panel">
-                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('LOCAL TIME', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Uses the WordPress site timezone by default. Choose another timezone only when needed.', 'uplink-hours-greetings'); ?></p></div></div>
-                <div class="tgb-default-fields">
-                    <div class="tgb-field"><label for="default_timezone"><?php esc_html_e('Timezone', 'uplink-hours-greetings'); ?></label><?php $this->timezone_field_callback(array('field' => 'default_timezone')); ?></div>
-                    <div class="tgb-field"><label for="default_tz_abbr"><?php esc_html_e('Timezone label (optional)', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'default_tz_abbr')); ?><p><?php esc_html_e('Leave blank to use the timezone’s current abbreviation.', 'uplink-hours-greetings'); ?></p></div>
+            <section id="ulhgr-panel-overview" class="ulhgr-tab-panel" role="tabpanel" aria-labelledby="ulhgr-tab-overview" data-ulhgr-panel="overview"<?php echo 'overview' === $current_tab ? '' : ' hidden'; ?>>
+            <section class="ulhgr-panel ulhgr-overview-panel">
+                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('LOCAL TIME', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Timezone', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Uses the WordPress site timezone by default. Choose another timezone only when needed.', 'uplink-hours-greetings'); ?></p></div></div>
+                <div class="ulhgr-default-fields">
+                    <div class="ulhgr-field"><label for="default_timezone"><?php esc_html_e('Timezone', 'uplink-hours-greetings'); ?></label><?php $this->timezone_field_callback(array('field' => 'default_timezone')); ?></div>
+                    <div class="ulhgr-field"><label for="default_tz_abbr"><?php esc_html_e('Timezone label (optional)', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'default_tz_abbr')); ?><p><?php esc_html_e('Leave blank to use the timezone’s current abbreviation.', 'uplink-hours-greetings'); ?></p></div>
                 </div>
             </section>
-            <section class="tgb-panel utg-overview-panel">
-                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('DATE WORDING', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Date introduction', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Set the words that appear before the date in the combined output and, optionally, Date only.', 'uplink-hours-greetings'); ?></p></div></div>
-                <div class="tgb-field tgb-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-hours-greetings'); ?></p></div>
-                <label class="tgb-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-hours-greetings'); ?></label>
+            <section class="ulhgr-panel ulhgr-overview-panel">
+                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('DATE WORDING', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Date introduction', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Set the words that appear before the date in the combined output and, optionally, Date only.', 'uplink-hours-greetings'); ?></p></div></div>
+                <div class="ulhgr-field ulhgr-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-hours-greetings'); ?></p></div>
+                <label class="ulhgr-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-hours-greetings'); ?></label>
             </section>
-            <div class="tgb-save-row"><?php submit_button(__('Save settings', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
-            <section class="tgb-panel tgb-preview utg-overview-panel">
-            <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('OUTPUT EXAMPLES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('What visitors see now', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('These examples use the same saved schedule and show each display option.', 'uplink-hours-greetings'); ?></p></div></div>
-            <div class="utg-preview-controls">
-                <label><?php esc_html_e('Preview date', 'uplink-hours-greetings'); ?><input type="date" class="utg-preview-date" value="<?php echo esc_attr($preview_now->format('Y-m-d')); ?>"></label>
-                <label><?php esc_html_e('Time', 'uplink-hours-greetings'); ?><input type="time" class="utg-preview-time" value="<?php echo esc_attr($preview_now->format('H:i')); ?>"></label>
-                <button type="button" class="button utg-preview-button"><?php esc_html_e('Update preview', 'uplink-hours-greetings'); ?></button>
-                <span class="utg-preview-status" role="status" aria-live="polite"></span>
+            <div class="ulhgr-save-row"><?php submit_button(__('Save settings', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
+            <section class="ulhgr-panel ulhgr-preview ulhgr-overview-panel">
+            <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('OUTPUT EXAMPLES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('What visitors see now', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('These examples use the same saved schedule and show each display option.', 'uplink-hours-greetings'); ?></p></div></div>
+            <div class="ulhgr-preview-controls">
+                <label><?php esc_html_e('Preview date', 'uplink-hours-greetings'); ?><input type="date" class="ulhgr-preview-date" value="<?php echo esc_attr($preview_now->format('Y-m-d')); ?>"></label>
+                <label><?php esc_html_e('Time', 'uplink-hours-greetings'); ?><input type="time" class="ulhgr-preview-time" value="<?php echo esc_attr($preview_now->format('H:i')); ?>"></label>
+                <button type="button" class="button ulhgr-preview-button"><?php esc_html_e('Update preview', 'uplink-hours-greetings'); ?></button>
+                <span class="ulhgr-preview-status" role="status" aria-live="polite"></span>
             </div>
-            <div class="tgb-example-grid">
+            <div class="ulhgr-example-grid">
                 <?php foreach (array('greeting' => __('Greeting', 'uplink-hours-greetings'), 'date' => __('Date', 'uplink-hours-greetings'), 'both' => __('Greeting and date', 'uplink-hours-greetings'), 'schedule' => __('Weekly schedule', 'uplink-hours-greetings')) as $display => $label) : ?>
-                    <div class="tgb-example" data-display="<?php echo esc_attr($display); ?>"><h3><?php echo esc_html($label); ?></h3><div class="tgb-preview-value"><?php echo wp_kses_post($this->generate_greeting(array('display' => $display))); ?></div></div>
+                    <div class="ulhgr-example" data-display="<?php echo esc_attr($display); ?>"><h3><?php echo esc_html($label); ?></h3><div class="ulhgr-preview-value"><?php echo wp_kses_post($this->generate_greeting(array('display' => $display))); ?></div></div>
                 <?php endforeach; ?>
             </div>
             <p><?php esc_html_e('Preview uses saved settings. Countdowns in blocks and shortcodes refresh on the page.', 'uplink-hours-greetings'); ?></p>
@@ -1331,12 +1323,12 @@ class Uplink_Hours_Greetings_Plugin {
     private function render_interval_row($profile_index, $row_index, $interval) {
         $name = UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][intervals][' . $row_index . ']';
         ?>
-        <div class="utg-interval-row">
+        <div class="ulhgr-interval-row">
             <label><?php esc_html_e('Starts at', 'uplink-hours-greetings'); ?><input type="time" step="60" name="<?php echo esc_attr($name . '[start]'); ?>" value="<?php echo esc_attr($interval['start']); ?>" required></label>
             <label><?php esc_html_e('Label', 'uplink-hours-greetings'); ?><input type="text" name="<?php echo esc_attr($name . '[label]'); ?>" value="<?php echo esc_attr($interval['label']); ?>" maxlength="80" placeholder="<?php esc_attr_e('Optional', 'uplink-hours-greetings'); ?>"></label>
             <label><?php esc_html_e('Event', 'uplink-hours-greetings'); ?><select name="<?php echo esc_attr($name . '[event]'); ?>"><option value="" <?php selected($interval['event'], ''); ?>><?php esc_html_e('None', 'uplink-hours-greetings'); ?></option><option value="opening" <?php selected($interval['event'], 'opening'); ?>><?php esc_html_e('Opening', 'uplink-hours-greetings'); ?></option><option value="closing" <?php selected($interval['event'], 'closing'); ?>><?php esc_html_e('Closing', 'uplink-hours-greetings'); ?></option></select></label>
-            <label class="utg-message-field"><?php esc_html_e('Message', 'uplink-hours-greetings'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2"><?php echo esc_textarea($interval['message']); ?></textarea></label>
-            <button type="button" class="button utg-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>" title="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
+            <label class="ulhgr-message-field"><?php esc_html_e('Message', 'uplink-hours-greetings'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2"><?php echo esc_textarea($interval['message']); ?></textarea></label>
+            <button type="button" class="button ulhgr-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>" title="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
         </div>
         <?php
     }
@@ -1348,36 +1340,36 @@ class Uplink_Hours_Greetings_Plugin {
         $selected_users = is_array($permissions) ? ($permissions['users'] ?? array()) : array();
         $users = get_users(array('orderby' => 'display_name', 'order' => 'ASC'));
         ?>
-        <form method="post" action="options.php" class="utg-permissions-form">
-            <?php settings_fields('tgb_permissions_group'); ?>
+        <form method="post" action="options.php" class="ulhgr-permissions-form">
+            <?php settings_fields('ulhgr_permissions_group'); ?>
             <input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION); ?>[_submitted]" value="1">
-            <section class="tgb-panel">
-                <div class="tgb-panel-heading"><div><p class="tgb-overline"><?php esc_html_e('ACCESS CONTROL', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Who can update settings', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Administrators always have access. You can also allow entire roles or specific users to edit the schedule and other plugin settings.', 'uplink-hours-greetings'); ?></p></div></div>
-                <div class="utg-permission-grid">
-                    <fieldset class="utg-permission-group">
+            <section class="ulhgr-panel">
+                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('ACCESS CONTROL', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Who can update settings', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Administrators always have access. You can also allow entire roles or specific users to edit the schedule and other plugin settings.', 'uplink-hours-greetings'); ?></p></div></div>
+                <div class="ulhgr-permission-grid">
+                    <fieldset class="ulhgr-permission-group">
                         <legend><?php esc_html_e('Roles', 'uplink-hours-greetings'); ?></legend>
                         <p><?php esc_html_e('Everyone with a selected role can update plugin settings.', 'uplink-hours-greetings'); ?></p>
-                        <div class="utg-permission-list">
-                            <div class="utg-permission-choice utg-permission-fixed"><span><?php esc_html_e('Administrator', 'uplink-hours-greetings'); ?></span><span><?php esc_html_e('Always allowed', 'uplink-hours-greetings'); ?></span></div>
+                        <div class="ulhgr-permission-list">
+                            <div class="ulhgr-permission-choice ulhgr-permission-fixed"><span><?php esc_html_e('Administrator', 'uplink-hours-greetings'); ?></span><span><?php esc_html_e('Always allowed', 'uplink-hours-greetings'); ?></span></div>
                             <?php foreach (wp_roles()->roles as $role_key => $role) : if ('administrator' === $role_key) { continue; } ?>
-                                <label class="utg-permission-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION); ?>[roles][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, (array) $selected_roles, true)); ?>><span><?php echo esc_html(translate_user_role($role['name'])); ?></span></label>
+                                <label class="ulhgr-permission-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION); ?>[roles][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, (array) $selected_roles, true)); ?>><span><?php echo esc_html(translate_user_role($role['name'])); ?></span></label>
                             <?php endforeach; ?>
                         </div>
                     </fieldset>
-                    <fieldset class="utg-permission-group">
+                    <fieldset class="ulhgr-permission-group">
                         <legend><?php esc_html_e('Individual users', 'uplink-hours-greetings'); ?></legend>
                         <p><?php esc_html_e('Grant access to a user without changing their role.', 'uplink-hours-greetings'); ?></p>
-                        <label class="utg-user-search-label" for="utg-user-search"><?php esc_html_e('Find a user', 'uplink-hours-greetings'); ?></label>
-                        <input type="search" id="utg-user-search" class="utg-user-search" placeholder="<?php esc_attr_e('Search by name or username', 'uplink-hours-greetings'); ?>">
-                        <div class="utg-permission-list utg-user-list">
+                        <label class="ulhgr-user-search-label" for="ulhgr-user-search"><?php esc_html_e('Find a user', 'uplink-hours-greetings'); ?></label>
+                        <input type="search" id="ulhgr-user-search" class="ulhgr-user-search" placeholder="<?php esc_attr_e('Search by name or username', 'uplink-hours-greetings'); ?>">
+                        <div class="ulhgr-permission-list ulhgr-user-list">
                             <?php foreach ($users as $user) : if (user_can($user, 'manage_options')) { continue; } ?>
-                                <label class="utg-permission-choice utg-user-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION); ?>[users][]" value="<?php echo esc_attr($user->ID); ?>" <?php checked(in_array((int) $user->ID, array_map('intval', (array) $selected_users), true)); ?>><span><?php echo esc_html($user->display_name); ?><small><?php echo esc_html($user->user_login); ?></small></span></label>
+                                <label class="ulhgr-permission-choice ulhgr-user-choice"><input type="checkbox" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION); ?>[users][]" value="<?php echo esc_attr($user->ID); ?>" <?php checked(in_array((int) $user->ID, array_map('intval', (array) $selected_users), true)); ?>><span><?php echo esc_html($user->display_name); ?><small><?php echo esc_html($user->user_login); ?></small></span></label>
                             <?php endforeach; ?>
                         </div>
                     </fieldset>
                 </div>
             </section>
-            <div class="tgb-save-row"><?php submit_button(__('Save permissions', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
+            <div class="ulhgr-save-row"><?php submit_button(__('Save permissions', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
         </form>
         <?php
     }
@@ -1385,19 +1377,19 @@ class Uplink_Hours_Greetings_Plugin {
     /** Usage and appearance guidance for every supported editor. */
     private function render_how_to_tab() {
         ?>
-        <div class="tgb-usage-grid">
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Insert the Uplink Hours & Greetings block, then choose greeting, date, both, or weekly schedule in the block sidebar.', 'uplink-hours-greetings'); ?></p></section>
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('BRICKS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements for each day, then style them in Bricks:', 'uplink-hours-greetings'); ?></p><p><code>{utg_day}</code> <code>{utg_hours}</code> <code>{utg_state}</code> <code>{utg_key}</code> <code>{utg_today}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [time_greeting display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-hours-greetings'); ?></p><p><code>{tgb_greeting}</code> <code>{tgb_date}</code> <code>{tgb_both}</code> <code>{tgb_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a live countdown.', 'uplink-hours-greetings'); ?></p></section>
-            <section class="tgb-panel tgb-etch-guide"><p class="tgb-overline"><?php esc_html_e('ETCH', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Options data', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-hours-greetings'); ?></p>
-                <h3><?php esc_html_e('Ready-made outputs', 'uplink-hours-greetings'); ?></h3><p><code>{options.time_greeting.greeting}</code> <code>{options.time_greeting.date}</code> <code>{options.time_greeting.both}</code> <code>{options.time_greeting.schedule}</code></p>
-                <h3><?php esc_html_e('Current and upcoming values', 'uplink-hours-greetings'); ?></h3><p><code>{options.time_greeting.timezone}</code> <code>{options.time_greeting.timezone_abbr}</code> <code>{options.time_greeting.now.time}</code> <code>{options.time_greeting.now.date}</code> <code>{options.time_greeting.now.timestamp}</code></p><p><code>{options.time_greeting.current.label}</code> <code>{options.time_greeting.current.start}</code> <code>{options.time_greeting.current.event}</code> <code>{options.time_greeting.current.message}</code> <code>{options.time_greeting.current.output}</code></p><p><code>{options.time_greeting.next.label}</code> <code>{options.time_greeting.next.time}</code> <code>{options.time_greeting.next.countdown}</code> <code>{options.time_greeting.next.event}</code> <code>{options.time_greeting.next.message}</code> <code>{options.time_greeting.next.start}</code> <code>{options.time_greeting.next.timestamp}</code></p><p><code>{options.time_greeting.opening.label}</code> <code>{options.time_greeting.opening.time}</code> <code>{options.time_greeting.opening.countdown}</code> <code>{options.time_greeting.opening.event}</code> <code>{options.time_greeting.opening.message}</code> <code>{options.time_greeting.opening.start}</code> <code>{options.time_greeting.opening.timestamp}</code></p>
-                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><code>{#loop options.time_greeting.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day also includes windows. Each window contains start, start_label, end, end_label, and overnight. Individual day strings are available at options.time_greeting.days.monday through sunday.', 'uplink-hours-greetings'); ?></p>
+        <div class="ulhgr-usage-grid">
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Insert the Uplink Hours & Greetings block, then choose greeting, date, both, or weekly schedule in the block sidebar.', 'uplink-hours-greetings'); ?></p></section>
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('BRICKS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements for each day, then style them in Bricks:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_day}</code> <code>{ulhgr_hours}</code> <code>{ulhgr_state}</code> <code>{ulhgr_key}</code> <code>{ulhgr_today}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [uplink_hours_greetings display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_greeting}</code> <code>{ulhgr_date}</code> <code>{ulhgr_both}</code> <code>{ulhgr_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a live countdown.', 'uplink-hours-greetings'); ?></p></section>
+            <section class="ulhgr-panel ulhgr-etch-guide"><p class="ulhgr-overline"><?php esc_html_e('ETCH', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Options data', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-hours-greetings'); ?></p>
+                <h3><?php esc_html_e('Ready-made outputs', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.greeting}</code> <code>{options.uplink_hours_greetings.date}</code> <code>{options.uplink_hours_greetings.both}</code> <code>{options.uplink_hours_greetings.schedule}</code></p>
+                <h3><?php esc_html_e('Current and upcoming values', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.timezone}</code> <code>{options.uplink_hours_greetings.timezone_abbr}</code> <code>{options.uplink_hours_greetings.now.time}</code> <code>{options.uplink_hours_greetings.now.date}</code> <code>{options.uplink_hours_greetings.now.timestamp}</code></p><p><code>{options.uplink_hours_greetings.current.label}</code> <code>{options.uplink_hours_greetings.current.start}</code> <code>{options.uplink_hours_greetings.current.event}</code> <code>{options.uplink_hours_greetings.current.message}</code> <code>{options.uplink_hours_greetings.current.output}</code></p><p><code>{options.uplink_hours_greetings.next.label}</code> <code>{options.uplink_hours_greetings.next.time}</code> <code>{options.uplink_hours_greetings.next.countdown}</code> <code>{options.uplink_hours_greetings.next.event}</code> <code>{options.uplink_hours_greetings.next.message}</code> <code>{options.uplink_hours_greetings.next.start}</code> <code>{options.uplink_hours_greetings.next.timestamp}</code></p><p><code>{options.uplink_hours_greetings.opening.label}</code> <code>{options.uplink_hours_greetings.opening.time}</code> <code>{options.uplink_hours_greetings.opening.countdown}</code> <code>{options.uplink_hours_greetings.opening.event}</code> <code>{options.uplink_hours_greetings.opening.message}</code> <code>{options.uplink_hours_greetings.opening.start}</code> <code>{options.uplink_hours_greetings.opening.timestamp}</code></p>
+                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><code>{#loop options.uplink_hours_greetings.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day also includes windows. Each window contains start, start_label, end, end_label, and overnight. Individual day strings are available at options.uplink_hours_greetings.days.monday through sunday.', 'uplink-hours-greetings'); ?></p>
             </section>
-            <section class="tgb-panel"><p class="tgb-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[time_greeting]</code> <code>[time_greeting display="both"]</code> <code>[time_greeting display="schedule"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-hours-greetings'); ?></p></section>
-            <section class="tgb-panel tgb-appearance-guide"><p class="tgb-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-hours-greetings'); ?></p><pre class="tgb-css-example"><code>.wp-block-time-greeting-block-time-greeting {
-    --tgb-greeting-font-weight: 600;
-    --tgb-date-font-style: italic;
-}</code></pre><p><?php esc_html_e('The ready-made schedule uses these classes:', 'uplink-hours-greetings'); ?></p><p><code>.utg-schedule</code> <code>.utg-schedule__day</code> <code>.utg-schedule__name</code> <code>.utg-schedule__hours</code> <code>.utg-schedule__interval</code> <code>.utg-schedule__status</code></p></section>
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="both"]</code> <code>[uplink_hours_greetings display="schedule"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-hours-greetings'); ?></p></section>
+            <section class="ulhgr-panel ulhgr-appearance-guide"><p class="ulhgr-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-hours-greetings'); ?></p><pre class="ulhgr-css-example"><code>.wp-block-uplink-hours-greetings-hours-greetings {
+    --ulhgr-greeting-font-weight: 600;
+    --ulhgr-date-font-style: italic;
+}</code></pre><p><?php esc_html_e('The ready-made schedule uses these classes:', 'uplink-hours-greetings'); ?></p><p><code>.ulhgr-schedule</code> <code>.ulhgr-schedule__day</code> <code>.ulhgr-schedule__name</code> <code>.ulhgr-schedule__hours</code> <code>.ulhgr-schedule__interval</code> <code>.ulhgr-schedule__status</code></p></section>
         </div>
         <?php
     }
