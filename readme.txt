@@ -1,9 +1,9 @@
 === Uplink Hours & Greetings ===
 Contributors: stphnwlkr
 Tags: business hours, countdown, greeting, bricks, etch
-Requires at least: 6.0
+Requires at least: 7.0
 Tested up to: 7.1
-Requires PHP: 7.4
+Requires PHP: 8.3
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -53,3 +53,4 @@ Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="date"], [upl
 = 1.0.0 =
 
 * Initial release with a reusable seven-day schedule, per-day customization, opening countdowns, live block and shortcode updates, Bricks and Etch data, and date controls.
+* Verified with WordPress 7.1.2 and PHP 8.3.
