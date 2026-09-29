@@ -3,7 +3,7 @@
  * Plugin Name: Uplink Hours & Greetings
  * Plugin URI: https://plugins.uplink.press/articles/meet-uplink-hours-and-greetings/
  * Description: Weekly business schedules, live countdowns, greetings, and dates for blocks, Bricks, Etch, and shortcodes.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Steve Walker
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('UPLINK_HOURS_GREETINGS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('UPLINK_HOURS_GREETINGS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('UPLINK_HOURS_GREETINGS_PLUGIN_VERSION', '1.0.0');
+define('UPLINK_HOURS_GREETINGS_PLUGIN_VERSION', '1.0.1');
 define('UPLINK_HOURS_GREETINGS_OPTION_NAME', 'ulhgr_settings');
 define('UPLINK_HOURS_GREETINGS_PERMISSIONS_OPTION', 'ulhgr_permissions');
 
@@ -101,6 +101,7 @@ class Uplink_Hours_Greetings_Plugin {
             'profiles' => $this->default_profiles(),
             'week' => $this->default_week(),
             'date_intro' => __('Today is', 'uplink-hours-greetings'),
+            'date_suffix' => '',
             'date_only_intro' => true,
             'default_timezone' => '',
             'default_tz_abbr' => '',
@@ -157,6 +158,7 @@ class Uplink_Hours_Greetings_Plugin {
             'profiles' => $this->default_profiles(),
             'week' => $this->default_week(),
             'date_intro' => __('Today is', 'uplink-hours-greetings'),
+            'date_suffix' => '',
             'date_only_intro' => true,
             'default_timezone' => '',
             'default_tz_abbr' => ''
@@ -190,10 +192,10 @@ class Uplink_Hours_Greetings_Plugin {
 
     private function default_intervals() {
         return array(
-            array('start' => '05:00', 'label' => __('Morning', 'uplink-hours-greetings'), 'message' => __('Good morning!', 'uplink-hours-greetings'), 'event' => ''),
-            array('start' => '12:00', 'label' => __('Afternoon', 'uplink-hours-greetings'), 'message' => __('Good afternoon!', 'uplink-hours-greetings'), 'event' => ''),
-            array('start' => '17:00', 'label' => __('Evening', 'uplink-hours-greetings'), 'message' => __('Good evening!', 'uplink-hours-greetings'), 'event' => ''),
-            array('start' => '22:00', 'label' => __('Night', 'uplink-hours-greetings'), 'message' => __("It's {time} {tz} and we're asleep.", 'uplink-hours-greetings'), 'event' => ''),
+            array('timing' => 'timed', 'start' => '05:00', 'label' => __('Morning', 'uplink-hours-greetings'), 'message' => __('Good morning!', 'uplink-hours-greetings'), 'event' => ''),
+            array('timing' => 'timed', 'start' => '12:00', 'label' => __('Afternoon', 'uplink-hours-greetings'), 'message' => __('Good afternoon!', 'uplink-hours-greetings'), 'event' => ''),
+            array('timing' => 'timed', 'start' => '17:00', 'label' => __('Evening', 'uplink-hours-greetings'), 'message' => __('Good evening!', 'uplink-hours-greetings'), 'event' => ''),
+            array('timing' => 'timed', 'start' => '22:00', 'label' => __('Night', 'uplink-hours-greetings'), 'message' => __("It's {time} {tz} and we're asleep.", 'uplink-hours-greetings'), 'event' => ''),
         );
     }
 
@@ -212,23 +214,34 @@ class Uplink_Hours_Greetings_Plugin {
 
     private function normalize_intervals($intervals) {
         $normalized = array();
-        foreach (array_slice($intervals, 0, 24) as $interval) {
-            if (!is_array($interval) || empty($interval['start'])) {
+        foreach (array_slice($intervals, 0, 24) as $order => $interval) {
+            if (!is_array($interval)) {
                 continue;
             }
-            $start = $this->normalize_start_time($interval['start']);
-            $normalized[$start] = array(
+            $timing = isset($interval['timing']) && 'untimed' === $interval['timing'] ? 'untimed' : 'timed';
+            if ('timed' === $timing && empty($interval['start'])) {
+                continue;
+            }
+            $start = 'timed' === $timing ? $this->normalize_start_time($interval['start']) : '';
+            $normalized[] = array(
+                'timing' => $timing,
                 'start' => $start,
                 'label' => isset($interval['label']) ? (string) $interval['label'] : '',
                 'message' => isset($interval['message']) ? (string) $interval['message'] : '',
-                'event' => isset($interval['event']) && in_array($interval['event'], array('opening', 'closing'), true) ? $interval['event'] : '',
+                'event' => 'untimed' === $timing ? 'closing' : (isset($interval['event']) && in_array($interval['event'], array('opening', 'closing'), true) ? $interval['event'] : ''),
+                '_order' => $order,
             );
         }
         if (!$normalized) {
             return $this->default_intervals();
         }
-        ksort($normalized, SORT_STRING);
-        return array_values($normalized);
+        usort($normalized, function ($a, $b) {
+            if ($a['timing'] !== $b['timing']) {
+                return 'timed' === $a['timing'] ? -1 : 1;
+            }
+            return 'timed' === $a['timing'] ? strcmp($a['start'], $b['start']) : $a['_order'] <=> $b['_order'];
+        });
+        return array_map(function ($interval) { unset($interval['_order']); return $interval; }, $normalized);
     }
 
     private function normalize_profiles($profiles) {
@@ -406,7 +419,7 @@ class Uplink_Hours_Greetings_Plugin {
                     '' === $date_intro ? '' : esc_html($date_intro) . ' ',
                     esc_attr($iso_date),
                     esc_html($current_date),
-                    '' === $date_intro ? '' : '.'
+                    esc_html($settings['date_suffix'])
                 );
                 if ('date' === $display) {
                     $output = $date_output;
@@ -421,9 +434,10 @@ class Uplink_Hours_Greetings_Plugin {
             }
         }
 
-        $next_change = 'date' === $display
+        $next_interval = 'date' === $display ? null : $this->next_interval($datetime, $settings);
+        $next_change = 'date' === $display || !$next_interval
             ? DateTimeImmutable::createFromMutable($datetime)->modify('tomorrow')->setTime(0, 0)->getTimestamp()
-            : $this->next_interval($datetime, $settings)['timestamp'];
+            : $next_interval['timestamp'];
         return sprintf(
             '<span class="ulhgr-output" data-ulhgr-display="%s" data-ulhgr-date-format="%s" data-ulhgr-timezone="%s" data-ulhgr-tz-abbr="%s" data-ulhgr-transition="%d">%s</span>',
             esc_attr($display),
@@ -462,9 +476,9 @@ class Uplink_Hours_Greetings_Plugin {
         $replacements = array(
             '{time}' => esc_html($current_time),
             '{tz}' => esc_html($tz_abbr),
-            '{next_label}' => esc_html($next['interval']['label']),
-            '{next_time}' => esc_html(wp_date($time_format, $next['timestamp'], $datetime->getTimezone())),
-            '{countdown}' => $this->countdown_markup($next['timestamp'], $datetime->getTimestamp()),
+            '{next_label}' => $next ? esc_html($next['interval']['label']) : esc_html__('Not scheduled', 'uplink-hours-greetings'),
+            '{next_time}' => $next ? esc_html(wp_date($time_format, $next['timestamp'], $datetime->getTimezone())) : esc_html__('Not scheduled', 'uplink-hours-greetings'),
+            '{countdown}' => $next ? $this->countdown_markup($next['timestamp'], $datetime->getTimestamp()) : esc_html__('Not scheduled', 'uplink-hours-greetings'),
             '{opening_countdown}' => $opening ? $this->countdown_markup($opening['timestamp'], $datetime->getTimestamp()) : esc_html__('No opening scheduled', 'uplink-hours-greetings'),
             '{opening_time}' => $opening ? esc_html(wp_date($time_format, $opening['timestamp'], $datetime->getTimezone())) : esc_html__('Not scheduled', 'uplink-hours-greetings'),
         );
@@ -489,6 +503,9 @@ class Uplink_Hours_Greetings_Plugin {
             $date = $midnight->modify($offset . ' days');
             $profile = $this->profile_for_day($settings, (int) $date->format('w'));
             foreach ($profile['intervals'] as $interval) {
+                if ('timed' !== ($interval['timing'] ?? 'timed') || empty($interval['start'])) {
+                    continue;
+                }
                 list($hour, $minute) = array_map('intval', explode(':', $interval['start']));
                 $timestamp = $date->setTime($hour, $minute)->getTimestamp();
                 if ($timestamp <= $now->getTimestamp() && (null === $latest || $timestamp > $latest['timestamp'])) {
@@ -496,7 +513,17 @@ class Uplink_Hours_Greetings_Plugin {
                 }
             }
         }
-        return $latest ? $latest['interval'] : $settings['profiles'][0]['intervals'][0];
+        if ($latest) {
+            return $latest['interval'];
+        }
+        foreach ($settings['profiles'] as $profile) {
+            foreach ($profile['intervals'] as $interval) {
+                if ('timed' === ($interval['timing'] ?? 'timed') && !empty($interval['start'])) {
+                    return $interval;
+                }
+            }
+        }
+        return $this->default_intervals()[0];
     }
 
     private function next_interval($datetime, $settings, $event = '') {
@@ -507,6 +534,9 @@ class Uplink_Hours_Greetings_Plugin {
             $date = $midnight->modify('+' . $offset . ' days');
             $profile = $this->profile_for_day($settings, (int) $date->format('w'));
             foreach ($profile['intervals'] as $interval) {
+                if ('timed' !== ($interval['timing'] ?? 'timed') || empty($interval['start'])) {
+                    continue;
+                }
                 if ('' !== $event && ($event !== $interval['event'] || !empty($profile['closed']))) {
                     continue;
                 }
@@ -595,7 +625,7 @@ class Uplink_Hours_Greetings_Plugin {
                             break;
                         }
                         if ('closing' === $later['event']) {
-                            $closing = $later['start'];
+                            $closing = $later;
                             break;
                         }
                     }
@@ -606,22 +636,27 @@ class Uplink_Hours_Greetings_Plugin {
                             if ('opening' === $later['event']) {
                                 break;
                             }
-                            if ('closing' === $later['event']) {
-                                $closing = $later['start'];
+                            if ('closing' === $later['event'] && 'timed' === ($later['timing'] ?? 'timed')) {
+                                $closing = $later;
                                 break;
                             }
                         }
                     }
                     $from = $sunday->modify('+' . $day . ' days')->setTime((int) substr($interval['start'], 0, 2), (int) substr($interval['start'], 3, 2));
                     $from_label = wp_date($time_format, $from->getTimestamp(), wp_timezone());
-                    $window = array('start' => $interval['start'], 'start_label' => $from_label, 'end' => '', 'end_label' => '', 'overnight' => false);
+                    $window = array('start' => $interval['start'], 'start_label' => $from_label, 'end' => '', 'end_label' => '', 'end_type' => 'none', 'overnight' => false);
                     if (null === $closing) {
                         /* translators: %s: opening time without a matching closing time. */
                         $hours[] = sprintf(__('From %s', 'uplink-hours-greetings'), $from_label);
+                    } elseif ('untimed' === ($closing['timing'] ?? 'timed')) {
+                        $window['end_label'] = '' !== trim($closing['label']) ? $closing['label'] : __('Closing time not set', 'uplink-hours-greetings');
+                        $window['end_type'] = 'text';
+                        $hours[] = $from_label . '–' . $window['end_label'];
                     } else {
-                        $to = $sunday->modify('+' . ($closing_day === $day ? $day : $day + 1) . ' days')->setTime((int) substr($closing, 0, 2), (int) substr($closing, 3, 2));
-                        $window['end'] = $closing;
+                        $to = $sunday->modify('+' . ($closing_day === $day ? $day : $day + 1) . ' days')->setTime((int) substr($closing['start'], 0, 2), (int) substr($closing['start'], 3, 2));
+                        $window['end'] = $closing['start'];
                         $window['end_label'] = wp_date($time_format, $to->getTimestamp(), wp_timezone());
+                        $window['end_type'] = 'time';
                         $window['overnight'] = $closing_day !== $day;
                         $hours[] = $from_label . '–' . $window['end_label'];
                     }
@@ -661,13 +696,17 @@ class Uplink_Hours_Greetings_Plugin {
                         $html .= '<span class="ulhgr-schedule__between">, </span>';
                     }
                     $html .= '<span class="ulhgr-schedule__interval"' . ($window['overnight'] ? ' data-overnight="true"' : '') . '>';
-                    if ('' === $window['end']) {
+                    if ('none' === $window['end_type']) {
                         $html .= '<span class="ulhgr-schedule__from">' . esc_html__('From', 'uplink-hours-greetings') . ' </span>';
                     }
                     $html .= '<time class="ulhgr-schedule__opens" datetime="' . esc_attr($window['start']) . '">' . esc_html($window['start_label']) . '</time>';
-                    if ('' !== $window['end']) {
+                    if ('none' !== $window['end_type']) {
                         $html .= '<span class="ulhgr-schedule__separator" aria-hidden="true">–</span><span class="ulhgr-visually-hidden">' . esc_html__(' to ', 'uplink-hours-greetings') . '</span>';
-                        $html .= '<time class="ulhgr-schedule__closes" datetime="' . esc_attr($window['end']) . '">' . esc_html($window['end_label']) . '</time>';
+                        if ('time' === $window['end_type']) {
+                            $html .= '<time class="ulhgr-schedule__closes" datetime="' . esc_attr($window['end']) . '">' . esc_html($window['end_label']) . '</time>';
+                        } else {
+                            $html .= '<span class="ulhgr-schedule__closes ulhgr-schedule__closes--text">' . esc_html($window['end_label']) . '</span>';
+                        }
                         if ($window['overnight']) {
                             $html .= '<span class="ulhgr-visually-hidden">' . esc_html__(' next day', 'uplink-hours-greetings') . '</span>';
                         }
@@ -728,6 +767,7 @@ class Uplink_Hours_Greetings_Plugin {
             ),
             'current' => array(
                 'label' => $current['label'],
+                'timing' => $current['timing'] ?? 'timed',
                 'start' => $current['start'],
                 'event' => $current['event'],
                 'message' => $current['message'],
@@ -735,6 +775,7 @@ class Uplink_Hours_Greetings_Plugin {
             ),
             'next' => $next ? array(
                 'label' => $next['interval']['label'],
+                'timing' => $next['interval']['timing'] ?? 'timed',
                 'time' => wp_date($time_format, $next['timestamp'], $timezone),
                 'countdown' => $this->format_duration($next['timestamp'] - $now->getTimestamp()),
                 'event' => $next['interval']['event'],
@@ -744,6 +785,7 @@ class Uplink_Hours_Greetings_Plugin {
             ) : array(),
             'opening' => $opening ? array(
                 'label' => $opening['interval']['label'],
+                'timing' => $opening['interval']['timing'] ?? 'timed',
                 'time' => wp_date($time_format, $opening['timestamp'], $timezone),
                 'countdown' => $this->format_duration($opening['timestamp'] - $now->getTimestamp()),
                 'event' => $opening['interval']['event'],
@@ -858,6 +900,8 @@ class Uplink_Hours_Greetings_Plugin {
                 'restUrl' => esc_url_raw(rest_url('uplink-hours-greetings/v1/render')),
                 'nonce' => wp_create_nonce('wp_rest'),
                 'previewError' => __('Preview unavailable. Try again.', 'uplink-hours-greetings'),
+                'optional' => __('Optional', 'uplink-hours-greetings'),
+                'untimedLabelExample' => __('Last Call', 'uplink-hours-greetings'),
             ));
             $this->enqueue_live_assets();
         }
@@ -1017,28 +1061,45 @@ class Uplink_Hours_Greetings_Plugin {
                 continue;
             }
             $intervals = array();
-            foreach (array_slice($rows, 0, 24) as $row) {
+            $timed_starts = array();
+            foreach (array_slice($rows, 0, 24) as $row_order => $row) {
                 if (!is_array($row)) {
                     $invalid_schedule = true;
                     continue;
                 }
+                $timing = isset($row['timing']) && is_scalar($row['timing']) && 'untimed' === sanitize_key(wp_unslash($row['timing'])) ? 'untimed' : 'timed';
                 $start = isset($row['start']) && is_scalar($row['start']) ? sanitize_text_field(wp_unslash($row['start'])) : '';
-                if (!preg_match('/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/', $start) || isset($intervals[$start])) {
+                if ('timed' === $timing && (!preg_match('/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/', $start) || isset($timed_starts[$start]))) {
                     $invalid_schedule = true;
                     continue;
                 }
                 $label = isset($row['label']) && is_scalar($row['label']) ? sanitize_text_field(wp_unslash($row['label'])) : '';
                 $message = isset($row['message']) && is_scalar($row['message']) ? sanitize_textarea_field(wp_unslash($row['message'])) : '';
                 $event = isset($row['event']) && is_scalar($row['event']) ? sanitize_key(wp_unslash($row['event'])) : '';
-                $intervals[$start] = array(
-                    'start' => $start,
+                if ('untimed' === $timing && '' === $label) {
+                    $invalid_schedule = true;
+                    continue;
+                }
+                if ('timed' === $timing) {
+                    $timed_starts[$start] = true;
+                }
+                $intervals[] = array(
+                    'timing' => $timing,
+                    'start' => 'timed' === $timing ? $start : '',
                     'label' => substr($label, 0, 80),
-                    'message' => $message,
-                    'event' => in_array($event, array('opening', 'closing'), true) ? $event : '',
+                    'message' => 'timed' === $timing ? $message : '',
+                    'event' => 'untimed' === $timing ? 'closing' : (in_array($event, array('opening', 'closing'), true) ? $event : ''),
+                    '_order' => $row_order,
                 );
             }
-            ksort($intervals, SORT_STRING);
-            $profiles[$id] = array('id' => $id, 'name' => substr($name, 0, 80), 'closed' => !empty($raw_profile['closed']), 'intervals' => array_values($intervals));
+            usort($intervals, function ($a, $b) {
+                if ($a['timing'] !== $b['timing']) {
+                    return 'timed' === $a['timing'] ? -1 : 1;
+                }
+                return 'timed' === $a['timing'] ? strcmp($a['start'], $b['start']) : $a['_order'] <=> $b['_order'];
+            });
+            $intervals = array_map(function ($interval) { unset($interval['_order']); return $interval; }, $intervals);
+            $profiles[$id] = array('id' => $id, 'name' => substr($name, 0, 80), 'closed' => !empty($raw_profile['closed']), 'intervals' => $intervals);
         }
         $raw_week = isset($input['week']) && is_array($input['week']) ? $input['week'] : array();
         $week = array();
@@ -1050,7 +1111,7 @@ class Uplink_Hours_Greetings_Plugin {
             $week[$day] = $id;
         }
         if ($invalid_schedule) {
-            add_settings_error(UPLINK_HOURS_GREETINGS_OPTION_NAME, 'profiles', __('Use a named schedule for every day. Each schedule needs 1–24 entries with unique start times. The previous week was kept.', 'uplink-hours-greetings'));
+            add_settings_error(UPLINK_HOURS_GREETINGS_OPTION_NAME, 'profiles', __('Use a named schedule for every day. Each schedule needs 1–24 valid entries; timed entries need unique start times and untimed entries need a label. The previous week was kept.', 'uplink-hours-greetings'));
             $sanitized['profiles'] = $defaults['profiles'];
             $sanitized['week'] = $defaults['week'];
         } else {
@@ -1060,6 +1121,7 @@ class Uplink_Hours_Greetings_Plugin {
         $sanitized['default_timezone'] = sanitize_text_field(wp_unslash($input['default_timezone'] ?? ''));
         $sanitized['default_tz_abbr'] = substr(sanitize_text_field(wp_unslash($input['default_tz_abbr'] ?? '')), 0, 20);
         $sanitized['date_intro'] = sanitize_text_field(wp_unslash($input['date_intro'] ?? $defaults['date_intro']));
+        $sanitized['date_suffix'] = substr(sanitize_text_field(wp_unslash($input['date_suffix'] ?? $defaults['date_suffix'])), 0, 12);
         $sanitized['date_only_intro'] = !empty($input['date_only_intro']);
 
         // An empty value follows the WordPress timezone setting.
@@ -1081,10 +1143,11 @@ class Uplink_Hours_Greetings_Plugin {
         $value = $settings[$args['field']];
 
         printf(
-            '<input type="text" id="%1$s" name="%3$s[%1$s]" value="%2$s" class="regular-text" />',
+            '<input type="text" id="%1$s" name="%3$s[%1$s]" value="%2$s" class="regular-text"%4$s />',
             esc_attr($args['field']),
             esc_attr($value),
-            esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME)
+            esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME),
+            isset($args['maxlength']) ? ' maxlength="' . esc_attr((string) $args['maxlength']) . '"' : ''
         );
     }
 
@@ -1251,7 +1314,7 @@ class Uplink_Hours_Greetings_Plugin {
                 </div>
             </section>
             <section class="ulhgr-panel ulhgr-schedule-panel">
-                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('REUSABLE DAILY SCHEDULES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Hours and messages', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Each entry begins at its start time and continues until the next entry, even across midnight. Mark an opening to count down to it from another day.', 'uplink-hours-greetings'); ?></p></div></div>
+                <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('REUSABLE DAILY SCHEDULES', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Hours and messages', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Timed entries change the active message. Use Closing text for a schedule value without a clock time, such as “Last Call”; it appears in schedule output without affecting greetings or countdowns.', 'uplink-hours-greetings'); ?></p></div></div>
                 <div class="ulhgr-token-guide" role="note" aria-labelledby="ulhgr-token-guide-title">
                     <div class="ulhgr-token-guide-heading"><span class="dashicons dashicons-editor-code" aria-hidden="true"></span><div><h3 id="ulhgr-token-guide-title"><?php esc_html_e('Write dynamic messages', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Place these tokens in a message. They show the configured local time and upcoming schedule events.', 'uplink-hours-greetings'); ?></p></div></div>
                     <ul class="ulhgr-token-list">
@@ -1278,7 +1341,7 @@ class Uplink_Hours_Greetings_Plugin {
                                 <?php $this->render_interval_row($profile_index, $row_index, $interval); ?>
                             <?php endforeach; ?>
                         </div>
-                        <button type="button" class="button ulhgr-add-interval"><?php esc_html_e('Add time entry', 'uplink-hours-greetings'); ?></button>
+                        <button type="button" class="button ulhgr-add-interval"><?php esc_html_e('Add schedule entry', 'uplink-hours-greetings'); ?></button>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -1296,7 +1359,10 @@ class Uplink_Hours_Greetings_Plugin {
             </section>
             <section class="ulhgr-panel ulhgr-overview-panel">
                 <div class="ulhgr-panel-heading"><div><p class="ulhgr-overline"><?php esc_html_e('DATE WORDING', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Date introduction', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Set the words that appear before the date in the combined output and, optionally, Date only.', 'uplink-hours-greetings'); ?></p></div></div>
-                <div class="ulhgr-field ulhgr-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-hours-greetings'); ?></p></div>
+                <div class="ulhgr-date-wording-fields">
+                    <div class="ulhgr-field ulhgr-date-intro-field"><label for="date_intro"><?php esc_html_e('Introduction', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'date_intro')); ?><p><?php esc_html_e('Translate or rewrite “Today is” for your audience. Leave blank to show only the date.', 'uplink-hours-greetings'); ?></p></div>
+                    <div class="ulhgr-field ulhgr-date-suffix-field"><label for="date_suffix"><?php esc_html_e('Ending punctuation', 'uplink-hours-greetings'); ?></label><?php $this->text_field_callback(array('field' => 'date_suffix', 'maxlength' => 12)); ?><p><?php esc_html_e('Leave blank for no ending. You can also use a period, exclamation mark, or localized punctuation.', 'uplink-hours-greetings'); ?></p></div>
+                </div>
                 <label class="ulhgr-checkbox-field" for="date_only_intro"><input type="hidden" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="0"><input type="checkbox" id="date_only_intro" name="<?php echo esc_attr(UPLINK_HOURS_GREETINGS_OPTION_NAME . '[date_only_intro]'); ?>" value="1" <?php checked(!empty($settings['date_only_intro'])); ?>><?php esc_html_e('Show the introduction with Date only', 'uplink-hours-greetings'); ?></label>
             </section>
             <div class="ulhgr-save-row"><?php submit_button(__('Save settings', 'uplink-hours-greetings'), 'primary', 'submit', false); ?></div>
@@ -1322,13 +1388,15 @@ class Uplink_Hours_Greetings_Plugin {
 
     private function render_interval_row($profile_index, $row_index, $interval) {
         $name = UPLINK_HOURS_GREETINGS_OPTION_NAME . '[profiles][' . $profile_index . '][intervals][' . $row_index . ']';
+        $timing = isset($interval['timing']) && 'untimed' === $interval['timing'] ? 'untimed' : 'timed';
         ?>
-        <div class="ulhgr-interval-row">
-            <label><?php esc_html_e('Starts at', 'uplink-hours-greetings'); ?><input type="time" step="60" name="<?php echo esc_attr($name . '[start]'); ?>" value="<?php echo esc_attr($interval['start']); ?>" required></label>
+        <div class="ulhgr-interval-row<?php echo 'untimed' === $timing ? ' is-untimed' : ''; ?>">
+            <label><?php esc_html_e('Entry type', 'uplink-hours-greetings'); ?><select class="ulhgr-entry-type" name="<?php echo esc_attr($name . '[timing]'); ?>"><option value="timed" <?php selected($timing, 'timed'); ?>><?php esc_html_e('Timed entry', 'uplink-hours-greetings'); ?></option><option value="untimed" <?php selected($timing, 'untimed'); ?>><?php esc_html_e('Closing text', 'uplink-hours-greetings'); ?></option></select></label>
+            <label class="ulhgr-time-field"><?php esc_html_e('Starts at', 'uplink-hours-greetings'); ?><input type="time" step="60" name="<?php echo esc_attr($name . '[start]'); ?>" value="<?php echo esc_attr($interval['start']); ?>" <?php echo 'timed' === $timing ? 'required' : 'disabled'; ?>></label>
             <label><?php esc_html_e('Label', 'uplink-hours-greetings'); ?><input type="text" name="<?php echo esc_attr($name . '[label]'); ?>" value="<?php echo esc_attr($interval['label']); ?>" maxlength="80" placeholder="<?php esc_attr_e('Optional', 'uplink-hours-greetings'); ?>"></label>
-            <label><?php esc_html_e('Event', 'uplink-hours-greetings'); ?><select name="<?php echo esc_attr($name . '[event]'); ?>"><option value="" <?php selected($interval['event'], ''); ?>><?php esc_html_e('None', 'uplink-hours-greetings'); ?></option><option value="opening" <?php selected($interval['event'], 'opening'); ?>><?php esc_html_e('Opening', 'uplink-hours-greetings'); ?></option><option value="closing" <?php selected($interval['event'], 'closing'); ?>><?php esc_html_e('Closing', 'uplink-hours-greetings'); ?></option></select></label>
-            <label class="ulhgr-message-field"><?php esc_html_e('Message', 'uplink-hours-greetings'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2"><?php echo esc_textarea($interval['message']); ?></textarea></label>
-            <button type="button" class="button ulhgr-remove-interval" aria-label="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>" title="<?php esc_attr_e('Remove time entry', 'uplink-hours-greetings'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
+            <label class="ulhgr-event-field"><?php esc_html_e('Event', 'uplink-hours-greetings'); ?><select name="<?php echo esc_attr($name . '[event]'); ?>" <?php echo 'untimed' === $timing ? 'disabled' : ''; ?>><option value="" <?php selected($interval['event'], ''); ?>><?php esc_html_e('None', 'uplink-hours-greetings'); ?></option><option value="opening" <?php selected($interval['event'], 'opening'); ?>><?php esc_html_e('Opening', 'uplink-hours-greetings'); ?></option><option value="closing" <?php selected($interval['event'], 'closing'); ?>><?php esc_html_e('Closing', 'uplink-hours-greetings'); ?></option></select></label>
+            <label class="ulhgr-message-field"><?php esc_html_e('Message', 'uplink-hours-greetings'); ?><textarea name="<?php echo esc_attr($name . '[message]'); ?>" rows="2" <?php echo 'untimed' === $timing ? 'disabled' : ''; ?>><?php echo esc_textarea($interval['message']); ?></textarea></label>
+            <button type="button" class="button ulhgr-remove-interval" aria-label="<?php esc_attr_e('Remove schedule entry', 'uplink-hours-greetings'); ?>" title="<?php esc_attr_e('Remove schedule entry', 'uplink-hours-greetings'); ?>"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6"/></svg></button>
         </div>
         <?php
     }
@@ -1382,8 +1450,8 @@ class Uplink_Hours_Greetings_Plugin {
             <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('BRICKS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements for each day, then style them in Bricks:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_day}</code> <code>{ulhgr_hours}</code> <code>{ulhgr_state}</code> <code>{ulhgr_key}</code> <code>{ulhgr_today}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [uplink_hours_greetings display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_greeting}</code> <code>{ulhgr_date}</code> <code>{ulhgr_both}</code> <code>{ulhgr_schedule}</code></p><p><?php esc_html_e('Tags resolve when the page renders. Use a Shortcode element for a live countdown.', 'uplink-hours-greetings'); ?></p></section>
             <section class="ulhgr-panel ulhgr-etch-guide"><p class="ulhgr-overline"><?php esc_html_e('ETCH', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Options data', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-hours-greetings'); ?></p>
                 <h3><?php esc_html_e('Ready-made outputs', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.greeting}</code> <code>{options.uplink_hours_greetings.date}</code> <code>{options.uplink_hours_greetings.both}</code> <code>{options.uplink_hours_greetings.schedule}</code></p>
-                <h3><?php esc_html_e('Current and upcoming values', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.timezone}</code> <code>{options.uplink_hours_greetings.timezone_abbr}</code> <code>{options.uplink_hours_greetings.now.time}</code> <code>{options.uplink_hours_greetings.now.date}</code> <code>{options.uplink_hours_greetings.now.timestamp}</code></p><p><code>{options.uplink_hours_greetings.current.label}</code> <code>{options.uplink_hours_greetings.current.start}</code> <code>{options.uplink_hours_greetings.current.event}</code> <code>{options.uplink_hours_greetings.current.message}</code> <code>{options.uplink_hours_greetings.current.output}</code></p><p><code>{options.uplink_hours_greetings.next.label}</code> <code>{options.uplink_hours_greetings.next.time}</code> <code>{options.uplink_hours_greetings.next.countdown}</code> <code>{options.uplink_hours_greetings.next.event}</code> <code>{options.uplink_hours_greetings.next.message}</code> <code>{options.uplink_hours_greetings.next.start}</code> <code>{options.uplink_hours_greetings.next.timestamp}</code></p><p><code>{options.uplink_hours_greetings.opening.label}</code> <code>{options.uplink_hours_greetings.opening.time}</code> <code>{options.uplink_hours_greetings.opening.countdown}</code> <code>{options.uplink_hours_greetings.opening.event}</code> <code>{options.uplink_hours_greetings.opening.message}</code> <code>{options.uplink_hours_greetings.opening.start}</code> <code>{options.uplink_hours_greetings.opening.timestamp}</code></p>
-                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><code>{#loop options.uplink_hours_greetings.week as day}</code><br><code>{day.day}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code><br><code>{/loop}</code></p><p><?php esc_html_e('Each day also includes windows. Each window contains start, start_label, end, end_label, and overnight. Individual day strings are available at options.uplink_hours_greetings.days.monday through sunday.', 'uplink-hours-greetings'); ?></p>
+                <h3><?php esc_html_e('Current and upcoming values', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.timezone}</code> <code>{options.uplink_hours_greetings.timezone_abbr}</code> <code>{options.uplink_hours_greetings.now.time}</code> <code>{options.uplink_hours_greetings.now.date}</code> <code>{options.uplink_hours_greetings.now.timestamp}</code></p><p><code>{options.uplink_hours_greetings.current.label}</code> <code>{options.uplink_hours_greetings.current.timing}</code> <code>{options.uplink_hours_greetings.current.start}</code> <code>{options.uplink_hours_greetings.current.event}</code> <code>{options.uplink_hours_greetings.current.message}</code> <code>{options.uplink_hours_greetings.current.output}</code></p><p><code>{options.uplink_hours_greetings.next.label}</code> <code>{options.uplink_hours_greetings.next.timing}</code> <code>{options.uplink_hours_greetings.next.time}</code> <code>{options.uplink_hours_greetings.next.countdown}</code> <code>{options.uplink_hours_greetings.next.event}</code> <code>{options.uplink_hours_greetings.next.message}</code> <code>{options.uplink_hours_greetings.next.start}</code> <code>{options.uplink_hours_greetings.next.timestamp}</code></p><p><code>{options.uplink_hours_greetings.opening.label}</code> <code>{options.uplink_hours_greetings.opening.timing}</code> <code>{options.uplink_hours_greetings.opening.time}</code> <code>{options.uplink_hours_greetings.opening.countdown}</code> <code>{options.uplink_hours_greetings.opening.event}</code> <code>{options.uplink_hours_greetings.opening.message}</code> <code>{options.uplink_hours_greetings.opening.start}</code> <code>{options.uplink_hours_greetings.opening.timestamp}</code></p>
+                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Add an Etch Loop block. Set Target to options.uplink_hours_greetings.week and Item ID to day. Inside it, build the row with native elements and these values:', 'uplink-hours-greetings'); ?></p><p><code>{day.day}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code></p><p><?php esc_html_e('Each day also includes windows. Add a nested Loop block with Target day.windows and Item ID window. Use window.start, window.start_label, window.end, window.end_label, window.end_type, and window.overnight. end_type is time, text, or none, so an untimed closing such as “Last Call” can be marked up as text. Individual day strings are available at options.uplink_hours_greetings.days.monday through sunday.', 'uplink-hours-greetings'); ?></p>
             </section>
             <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="both"]</code> <code>[uplink_hours_greetings display="schedule"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-hours-greetings'); ?></p></section>
             <section class="ulhgr-panel ulhgr-appearance-guide"><p class="ulhgr-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-hours-greetings'); ?></p><pre class="ulhgr-css-example"><code>.wp-block-uplink-hours-greetings-hours-greetings {

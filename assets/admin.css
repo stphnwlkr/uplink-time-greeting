@@ -83,7 +83,10 @@
 .ulhgr-profile-name{width:min(100%,360px)}
 .ulhgr-profile-name label,.ulhgr-interval-row label{display:grid;gap:6px;min-width:0;color:#2e4254;font-weight:600;line-height:1.35}
 .ulhgr-intervals{display:grid;gap:9px;margin-bottom:12px}
-.ulhgr-interval-row{display:grid;grid-template-columns:minmax(130px,.9fr) minmax(135px,1.45fr) minmax(120px,.9fr) minmax(240px,2.7fr) 34px;align-items:start;gap:10px;padding:12px 13px;border:1px solid #e1e8ee;border-radius:9px;background:#fff}
+.ulhgr-interval-row{display:grid;grid-template-columns:minmax(125px,.95fr) minmax(115px,.8fr) minmax(130px,1.15fr) minmax(110px,.8fr) minmax(220px,2.25fr) 34px;align-items:start;gap:10px;padding:12px 13px;border:1px solid #e1e8ee;border-radius:9px;background:#fff}
+.ulhgr-interval-row.is-untimed{background:#fbfcfd}
+.ulhgr-interval-row.is-untimed .ulhgr-time-field,.ulhgr-interval-row.is-untimed .ulhgr-event-field,.ulhgr-interval-row.is-untimed .ulhgr-message-field{opacity:.52}
+.ulhgr-interval-row.is-untimed :disabled{cursor:not-allowed;background-color:#f2f5f7;color:#6f7d88}
 .ulhgr-profile .button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
 .ulhgr-profile .ulhgr-closed-field{margin:0 0 12px}
 .ulhgr-countdown{font-variant-numeric:tabular-nums}
@@ -103,8 +106,9 @@
 .ulhgr-default-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
 .ulhgr-default-fields .ulhgr-field{margin:0}
 .ulhgr-default-fields .ulhgr-field p{margin:7px 0 0;font-size:12px}
-.ulhgr-date-intro-field{max-width:520px;margin-top:0}
-.ulhgr-date-intro-field p{margin:7px 0 0;font-size:12px}
+.ulhgr-date-wording-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr);gap:22px;max-width:760px}
+.ulhgr-date-intro-field,.ulhgr-date-suffix-field{margin-top:0}
+.ulhgr-date-wording-fields p{margin:7px 0 0;font-size:12px}
 .ulhgr-checkbox-field{display:flex;align-items:center;gap:9px;margin-top:20px;color:#2e4254;font-weight:600}
 .ulhgr-checkbox-field input[type=checkbox]{margin:0}
 .ulhgr-admin .button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border:1px solid #b9cbd6;border-radius:8px;background:#fff;color:#244b63;font-size:13px;font-weight:600;line-height:1.2;text-decoration:none;box-shadow:0 1px 2px rgba(25,48,66,.04);transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,color .15s ease}
@@ -134,8 +138,8 @@
 .ulhgr-admin code{display:inline-block;margin:3px 3px 3px 0;padding:3px 6px;border-radius:5px;background:#edf3f6;color:#204761;overflow-wrap:anywhere;white-space:normal}
 .ulhgr-css-example{padding:18px;border:1px solid #dfe7ec;border-radius:9px;background:#f7fafb;overflow-x:auto}
 .ulhgr-css-example code{display:block;margin:0;padding:0;background:none;white-space:pre}
-@media(max-width:1100px){.ulhgr-week-grid{grid-template-columns:1fr}.ulhgr-interval-row{grid-template-columns:minmax(130px,1fr) minmax(145px,1.5fr) minmax(120px,1fr) 34px}.ulhgr-message-field{grid-column:1/-2}}
-@media(max-width:782px){.ulhgr-period-grid,.ulhgr-default-fields,.ulhgr-usage-grid,.ulhgr-example-grid,.ulhgr-permission-grid{grid-template-columns:1fr}.ulhgr-admin-header{padding:25px;align-items:flex-start}.ulhgr-version{display:none}.ulhgr-interval-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.ulhgr-interval-row label:nth-child(3){grid-column:1/2}.ulhgr-message-field{grid-column:2/3}.ulhgr-interval-row .ulhgr-remove-interval{grid-column:3;grid-row:2}.ulhgr-day-controls{grid-template-columns:1fr}.ulhgr-day-row .button{grid-column:auto}.ulhgr-preview-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ulhgr-preview-button,.ulhgr-preview-status{grid-column:1/-1}}
-@media(max-width:550px){.ulhgr-admin{margin-right:10px}.ulhgr-admin-header{gap:15px}.ulhgr-header-icon{width:52px;height:52px}.ulhgr-header-icon img{width:39px;height:35px}.ulhgr-admin-header h1{font-size:25px}.ulhgr-panel{padding:20px}.ulhgr-tabs a{flex:1;text-align:center}.ulhgr-profile{padding:14px}.ulhgr-interval-row{grid-template-columns:minmax(0,1fr) 34px}.ulhgr-interval-row label,.ulhgr-interval-row label:nth-child(3),.ulhgr-message-field{grid-column:1;grid-row:auto}.ulhgr-interval-row .ulhgr-remove-interval{grid-column:2;grid-row:1}.ulhgr-profile-heading{align-items:stretch;flex-direction:column}.ulhgr-profile-name{width:100%}}
+@media(max-width:1100px){.ulhgr-week-grid{grid-template-columns:1fr}.ulhgr-interval-row{grid-template-columns:repeat(4,minmax(110px,1fr)) 34px}.ulhgr-message-field{grid-column:1/-2}}
+@media(max-width:782px){.ulhgr-period-grid,.ulhgr-default-fields,.ulhgr-date-wording-fields,.ulhgr-usage-grid,.ulhgr-example-grid,.ulhgr-permission-grid{grid-template-columns:1fr}.ulhgr-admin-header{padding:25px;align-items:flex-start}.ulhgr-version{display:none}.ulhgr-interval-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.ulhgr-message-field{grid-column:1/3}.ulhgr-interval-row .ulhgr-remove-interval{grid-column:3;grid-row:2}.ulhgr-day-controls{grid-template-columns:1fr}.ulhgr-day-row .button{grid-column:auto}.ulhgr-preview-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ulhgr-preview-button,.ulhgr-preview-status{grid-column:1/-1}}
+@media(max-width:550px){.ulhgr-admin{margin-right:10px}.ulhgr-admin-header{gap:15px}.ulhgr-header-icon{width:52px;height:52px}.ulhgr-header-icon img{width:39px;height:35px}.ulhgr-admin-header h1{font-size:25px}.ulhgr-panel{padding:20px}.ulhgr-tabs a{flex:1;text-align:center}.ulhgr-profile{padding:14px}.ulhgr-interval-row{grid-template-columns:minmax(0,1fr) 34px}.ulhgr-interval-row label,.ulhgr-message-field{grid-column:1;grid-row:auto}.ulhgr-interval-row .ulhgr-remove-interval{grid-column:2;grid-row:1}.ulhgr-profile-heading{align-items:stretch;flex-direction:column}.ulhgr-profile-name{width:100%}}
 @media(max-width:782px){.ulhgr-toast{top:60px;right:16px}}
 @media(prefers-reduced-motion:reduce){.ulhgr-toast{transition:none}}

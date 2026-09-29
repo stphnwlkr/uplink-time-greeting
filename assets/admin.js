@@ -123,7 +123,34 @@
             field.style.height = Math.min(Math.max(field.scrollHeight + 2, 42), 112) + 'px';
         }
 
+        function syncTimingRow(row) {
+            const type = row.querySelector('.ulhgr-entry-type');
+            const time = row.querySelector('.ulhgr-time-field input');
+            const label = row.querySelector('input[name$="[label]"]');
+            const event = row.querySelector('.ulhgr-event-field select');
+            const message = row.querySelector('.ulhgr-message-field textarea');
+            const untimed = type.value === 'untimed';
+
+            row.classList.toggle('is-untimed', untimed);
+            time.disabled = untimed;
+            time.required = !untimed;
+            label.required = untimed;
+            label.placeholder = untimed ? ulhgrAdmin.untimedLabelExample : ulhgrAdmin.optional;
+            message.disabled = untimed;
+            event.disabled = untimed;
+            if (untimed) {
+                if (!event.dataset.beforeUntimed) {
+                    event.dataset.beforeUntimed = event.value;
+                }
+                event.value = 'closing';
+            } else if (Object.prototype.hasOwnProperty.call(event.dataset, 'beforeUntimed')) {
+                event.value = event.dataset.beforeUntimed;
+                delete event.dataset.beforeUntimed;
+            }
+        }
+
         container.querySelectorAll('.ulhgr-message-field textarea').forEach(resizeMessage);
+        container.querySelectorAll('.ulhgr-interval-row').forEach(syncTimingRow);
 
         function updateChoices() {
             const choices = profiles().map(function (profile) {
@@ -199,6 +226,11 @@
                 resizeMessage(event.target);
             }
         });
+        container.addEventListener('change', function (event) {
+            if (event.target.matches('.ulhgr-entry-type')) {
+                syncTimingRow(event.target.closest('.ulhgr-interval-row'));
+            }
+        });
         container.addEventListener('click', function (event) {
             const profile = event.target.closest('.ulhgr-profile');
             if (!profile) {
@@ -222,7 +254,11 @@
                     field.name = field.name.replace(/\[intervals\]\[\d+\]/, '[intervals][' + next + ']');
                     field.value = field.tagName === 'SELECT' ? '' : '';
                 });
+                clone.querySelector('.ulhgr-entry-type').value = 'timed';
+                clone.querySelector('.ulhgr-event-field select').value = '';
+                delete clone.querySelector('.ulhgr-event-field select').dataset.beforeUntimed;
                 rows.append(clone);
+                syncTimingRow(clone);
                 resizeMessage(clone.querySelector('.ulhgr-message-field textarea'));
                 clone.querySelector('input[type="time"]').focus();
                 updateChoices();

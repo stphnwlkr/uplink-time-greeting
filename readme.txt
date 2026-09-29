@@ -4,7 +4,7 @@ Tags: business hours, countdown, greeting, bricks, etch
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,11 +12,11 @@ Show greetings, opening countdowns, and dates from a reusable seven-day business
 
 == Description ==
 
-Build reusable daily schedules with up to 24 time entries each. Assign the same schedule to Monday through Friday, for example, then copy it to customize one day. A separate schedule can cover weekends. Each entry has a start time, optional label, message, and optional Opening or Closing event. Messages continue until the next entry, including across midnight.
+Build reusable daily schedules with up to 24 entries each. Assign the same schedule to Monday through Friday, for example, then copy it to customize one day. A separate schedule can cover weekends. Timed entries have a start time, optional label, message, and optional Opening or Closing event. Messages continue until the next timed entry, including across midnight. Closing text entries add an untimed value such as "Last Call" to the public schedule without changing greetings or countdowns.
 
 Use {time} and {tz} in messages, or {countdown} for time until the next entry. {next_label} and {next_time} describe that entry. Mark an entry as Opening to use {opening_countdown} and {opening_time}, even when the next opening is on another day. Example: a 5:00 AM message can say "It's {time}. We open in {countdown}." before a 7:00 AM Opening entry.
 
-The WordPress block and shortcode render semantic, styleable weekly hours and refresh at schedule changes. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements; its Shortcode element can show the ready-made markup. Etch receives complete outputs, current and upcoming values, individual days, and an ordered week array for custom markup. Bricks dynamic tags and Etch text options resolve when the page renders; for a live countdown in either builder, use a shortcode-capable element. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. The plugin also offers editable date wording and output examples for greeting, date, both, and schedule.
+The WordPress block and shortcode render semantic, styleable weekly hours and refresh at schedule changes. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements; its Shortcode element can show the ready-made markup. Etch receives complete outputs, current and upcoming values, individual days, and an ordered week array for custom markup. Bricks dynamic tags and Etch text options resolve when the page renders; for a live countdown in either builder, use a shortcode-capable element. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. The plugin also offers editable date wording and ending punctuation, plus output examples for greeting, date, both, and schedule.
 
 Administrators can grant update access to additional roles or individual users in the Permissions tab. Administrator access is always retained.
 
@@ -46,13 +46,19 @@ For a custom layout, enable Query Loop on a Div or Container and choose Uplink W
 
 = How do I use it in Etch? =
 
-Loop over {options.uplink_hours_greetings.week} to build a schedule with your own semantic HTML and classes. Every day includes its key, number, name, state, today flag, text hours, and opening/closing windows. Direct data also includes greeting, date, both, schedule, timezone, timezone_abbr, now, current, next, opening, and days. The plugin's How to Use tab lists every path and window field. Use a shortcode-capable element for a live countdown or the ready-made schedule markup.
+Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item ID day. Build the row with native Etch elements and use {day.day}, {day.hours}, {day.state}, {day.key}, {day.number}, and {day.is_today}. For individual opening and closing values, add a nested Loop block with Target day.windows and Item ID window. Its fields include start, start_label, end, end_label, end_type, and overnight. end_type is time, text, or none, so an untimed closing such as “Last Call” can be styled as text. Direct data also includes greeting, date, both, schedule, timezone, timezone_abbr, now, current, next, opening, and days. The plugin's How to Use tab lists every path. Use a shortcode-capable element for a live countdown or the ready-made schedule markup.
 
 = Is there a shortcode? =
 
 Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="date"], [uplink_hours_greetings display="both"], or [uplink_hours_greetings display="schedule"]. The shortcode also accepts date_format, timezone, and tz_abbr.
 
 == Changelog ==
+
+= 1.0.1 =
+
+* Added customizable date ending punctuation, blank by default.
+* Added untimed closing text for schedule values such as "Last Call."
+* Added semantic text markup and Etch end_type data for untimed closing values.
 
 = 1.0.0 =
 
