@@ -26,6 +26,10 @@ Administrators can grant update access to additional roles or individual users i
 2. Open Settings > Uplink Hours & Greetings > Weekly schedule to assign daily schedules and write messages. Expand a day to assign or customize its schedule.
 3. Add the block, a builder dynamic tag, or a shortcode to a page.
 
+== Screenshots ==
+
+1. Output preview showing the current greeting, date, combined output, and weekly schedule.
+
 == Frequently Asked Questions ==
 
 = How do I set Monday through Friday hours once? =

@@ -39,6 +39,6 @@ Etch receives an ordered `week` array that follows WordPress's **Week Starts On*
 </dl>
 ```
 
-This repository includes installable source. WordPress.org directory graphics live in `wordpress-org-assets/` and are excluded from the release ZIP. See `readme.txt` for the public description.
+This repository includes installable source. Release-ready WordPress.org graphics live in `.wordpress-org/`; editable source graphics live in `wordpress-org-assets/` and are excluded from the plugin ZIP. See `readme.txt` for the public description.
 
 License: GPLv2 or later.
