@@ -135,6 +135,12 @@
 .ulhgr-usage-grid .ulhgr-panel{margin:0;min-height:190px}
 .ulhgr-etch-guide,.ulhgr-appearance-guide{grid-column:1/-1}
 .ulhgr-usage-grid h3{margin-top:18px;font-size:14px}
+.ulhgr-guide-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 20px;padding:6px;border:1px solid #dfe7ec;border-radius:12px;background:#f7fafb}
+.ulhgr-guide-tab{min-height:38px;padding:8px 15px;border:0;border-radius:8px;background:transparent;color:#496071;font:inherit;font-weight:600;cursor:pointer}
+.ulhgr-guide-tab:hover,.ulhgr-guide-tab:focus{background:#eaf1f4;color:#173d54}
+.ulhgr-guide-tab.is-active{background:#fff;color:#173d54;box-shadow:0 1px 4px rgba(25,48,66,.12)}
+.ulhgr-guide-tab:focus-visible{outline:2px solid #377fa2;outline-offset:2px}
+.ulhgr-guide-panel[hidden]{display:none!important}
 .ulhgr-admin code{display:inline-block;margin:3px 3px 3px 0;padding:3px 6px;border-radius:5px;background:#edf3f6;color:#204761;overflow-wrap:anywhere;white-space:normal}
 .ulhgr-css-example{padding:18px;border:1px solid #dfe7ec;border-radius:9px;background:#f7fafb;overflow-x:auto}
 .ulhgr-css-example code{display:block;margin:0;padding:0;background:none;white-space:pre}

@@ -87,6 +87,42 @@
         });
     }
 
+    function initGuideTabs() {
+        const tablist = document.querySelector('.ulhgr-guide-tabs');
+        if (!tablist) return;
+        const tabs = Array.from(tablist.querySelectorAll('[data-ulhgr-guide-tab]'));
+        const panels = Array.from(document.querySelectorAll('[data-ulhgr-guide-panel]'));
+
+        function showGuide(key, focusTab) {
+            const selected = tabs.find(function (tab) { return tab.dataset.ulhgrGuideTab === key; });
+            if (!selected) return;
+            tabs.forEach(function (tab) {
+                const active = tab === selected;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                tab.tabIndex = active ? 0 : -1;
+            });
+            panels.forEach(function (panel) {
+                panel.hidden = panel.dataset.ulhgrGuidePanel !== key;
+            });
+            if (focusTab) selected.focus();
+        }
+
+        tabs.forEach(function (tab, index) {
+            tab.addEventListener('click', function () { showGuide(tab.dataset.ulhgrGuideTab, false); });
+            tab.addEventListener('keydown', function (event) {
+                let next = index;
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + tabs.length) % tabs.length;
+                else if (event.key === 'Home') next = 0;
+                else if (event.key === 'End') next = tabs.length - 1;
+                else return;
+                event.preventDefault();
+                showGuide(tabs[next].dataset.ulhgrGuideTab, true);
+            });
+        });
+    }
+
     function initPermissionSearch() {
         const search = document.querySelector('.ulhgr-user-search');
         if (!search) {
@@ -395,9 +431,10 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initTabs(); initToast(); initPermissionSearch(); initScheduler(); initSpecialDates(); initPreview(); });
+        document.addEventListener('DOMContentLoaded', function () { initTabs(); initGuideTabs(); initToast(); initPermissionSearch(); initScheduler(); initSpecialDates(); initPreview(); });
     } else {
         initTabs();
+        initGuideTabs();
         initToast();
         initPermissionSearch();
         initScheduler();

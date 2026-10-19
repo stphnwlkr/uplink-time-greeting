@@ -16,7 +16,7 @@ Build reusable daily schedules with up to 24 entries each. Assign the same sched
 
 Use {time} and {tz} in messages, or {countdown} for time until the next entry. {next_label} and {next_time} describe that entry. Mark an entry as Opening to use {opening_countdown} and {opening_time}, even when the next opening is on another day. Example: a 5:00 AM message can say "It's {time}. We open in {countdown}." before a 7:00 AM Opening entry.
 
-The WordPress blocks and shortcode render semantic, styleable weekly hours, live status, and special-date overrides. The dedicated Uplink Special Dates block can show one selected promotion or an upcoming list of holidays, closures, and sales dates. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements. Etch receives complete outputs, computed open status, current window, next change, special dates, individual days, and an ordered week array for custom markup. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. Optional LocalBusiness structured data publishes the same regular and special hours to search engines.
+The WordPress blocks and shortcode render semantic, styleable weekly hours, live status, and special-date overrides. The dedicated Uplink Special Dates block can show one selected promotion or an upcoming list of holidays, closures, and sales dates. Bricks offers separate weekly schedule and upcoming special-date query types so each row can be designed with native layout elements. Etch receives complete outputs, computed open status, current window, next change, special dates, individual days, and an ordered week array for custom markup. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. Optional LocalBusiness structured data publishes the same regular and special hours to search engines.
 
 Administrators can grant update access to additional roles or individual users in the Permissions tab. Administrator access is always retained.
 
@@ -42,7 +42,7 @@ Mark an entry as Opening. Use {opening_countdown} in an earlier message. {countd
 
 = How do I use it in Bricks? =
 
-For a custom layout, enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. Add child elements with {ulhgr_day} and {ulhgr_hours}; {ulhgr_state}, {ulhgr_key}, and {ulhgr_today} are also available inside the loop. The query follows WordPress's Week Starts On setting and includes closed days. For semantic hours, place the loop's Div inside a dl and set the day and hours child HTML tags to dt and dd. A Shortcode element with [uplink_hours_greetings display="schedule"] provides ready-made semantic output. Insert {ulhgr_greeting}, {ulhgr_date}, {ulhgr_both}, or {ulhgr_schedule} in a dynamic text field for inline text. Use [uplink_hours_greetings] in a Shortcode element for a live countdown.
+For a weekly layout, enable Query Loop on an inner Div or Block and choose Uplink Weekly Schedule. Add child elements with {ulhgr_day} and {ulhgr_hours}; {ulhgr_state}, {ulhgr_key}, and {ulhgr_today} are also available inside the loop. To load upcoming events, choose Uplink Special Dates and use {ulhgr_event_date_label}, {ulhgr_event_title}, {ulhgr_event_message}, {ulhgr_event_hours}, {ulhgr_event_link_url}, and {ulhgr_event_link_label}. The How to Use tab contains the complete setup and tag lists. A Shortcode element with [uplink_hours_greetings display="schedule"] provides ready-made semantic schedule output.
 
 = How do I use it in Etch? =
 
@@ -60,6 +60,8 @@ Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [u
 * Added computed open status, current window, and next status change.
 * Added optional LocalBusiness structured data with special opening hours.
 * Added status and special-date values to Bricks and Etch integrations.
+* Added an Uplink Special Dates query source for building upcoming event lists in Bricks.
+* Organized How to Use guidance into Blocks and shortcodes, Etch, and Bricks Builder tabs.
 * Added an open or closed status display to the block and shortcode.
 
 = 1.0.1 =

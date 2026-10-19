@@ -1260,17 +1260,36 @@ class Uplink_Hours_Greetings_Plugin {
         ) as $key => $label) {
             $tags[] = array('name' => '{ulhgr_' . $key . '}', 'label' => $label, 'group' => __('Uplink Hours & Greetings', 'uplink-hours-greetings'));
         }
+        foreach (array(
+            'event_date' => __('Special date: ISO date', 'uplink-hours-greetings'),
+            'event_date_label' => __('Special date: formatted date', 'uplink-hours-greetings'),
+            'event_title' => __('Special date: title', 'uplink-hours-greetings'),
+            'event_message' => __('Special date: message', 'uplink-hours-greetings'),
+            'event_hours' => __('Special date: hours', 'uplink-hours-greetings'),
+            'event_closed' => __('Special date: closed (1 or 0)', 'uplink-hours-greetings'),
+            'event_link_url' => __('Special date: link URL', 'uplink-hours-greetings'),
+            'event_link_label' => __('Special date: link label', 'uplink-hours-greetings'),
+        ) as $key => $label) {
+            $tags[] = array('name' => '{ulhgr_' . $key . '}', 'label' => $label, 'group' => __('Uplink Hours & Greetings', 'uplink-hours-greetings'));
+        }
         return $tags;
     }
 
     /** Expose the ordered seven-day schedule as a native Bricks Query Loop source. */
     public function bricks_query_options($options) {
         $options['queryTypes']['ulhgr_schedule'] = __('Uplink Weekly Schedule', 'uplink-hours-greetings');
+        $options['queryTypes']['ulhgr_special_dates'] = __('Uplink Special Dates', 'uplink-hours-greetings');
         return $options;
     }
 
     public function bricks_schedule_query($results, $query) {
-        if (!is_object($query) || !isset($query->object_type) || 'ulhgr_schedule' !== $query->object_type) {
+        if (!is_object($query) || !isset($query->object_type)) {
+            return $results;
+        }
+        if ('ulhgr_special_dates' === $query->object_type) {
+            return $this->bricks_special_date_rows();
+        }
+        if ('ulhgr_schedule' !== $query->object_type) {
             return $results;
         }
         $rows = $this->schedule_rows();
@@ -1279,6 +1298,37 @@ class Uplink_Hours_Greetings_Plugin {
             $row['is_today'] = $row['number'] === $today;
         }
         unset($row);
+        return $rows;
+    }
+
+    /** Upcoming special dates formatted as rows for Bricks Query Loop. */
+    private function bricks_special_date_rows() {
+        $settings = $this->get_settings();
+        try {
+            $timezone = new DateTimeZone($settings['default_timezone'] ?: wp_timezone_string());
+        } catch (Exception $error) {
+            $timezone = wp_timezone();
+        }
+        $today = (new DateTimeImmutable('now', $timezone))->format('Y-m-d');
+        $date_format = get_option('date_format', 'F j, Y');
+        $rows = array();
+        foreach ($settings['special_dates'] as $special) {
+            if ($special['date'] < $today) {
+                continue;
+            }
+            $date = DateTimeImmutable::createFromFormat('!Y-m-d', $special['date'], $timezone);
+            $rows[] = array(
+                'event_date' => $special['date'],
+                'event_date_label' => $date ? wp_date($date_format, $date->getTimestamp(), $timezone) : $special['date'],
+                'event_title' => $special['label'],
+                'event_message' => $special['message'],
+                'event_hours' => wp_strip_all_tags($this->special_date_hours_html($special, $timezone)),
+                'event_closed' => !empty($special['closed']),
+                'event_link_url' => $special['link_url'],
+                'event_link_label' => $special['link_label'] ?: __('Learn more', 'uplink-hours-greetings'),
+                'windows' => $special['windows'],
+            );
+        }
         return $rows;
     }
 
@@ -1311,14 +1361,49 @@ class Uplink_Hours_Greetings_Plugin {
         return isset($row[$key]) && is_scalar($row[$key]) ? (string) $row[$key] : '';
     }
 
+    private function bricks_special_date_field($key) {
+        if (!class_exists('\\Bricks\\Query') || 'ulhgr_special_dates' !== \Bricks\Query::get_query_object_type()) {
+            return null;
+        }
+        $row = \Bricks\Query::get_loop_object();
+        if (!is_array($row) || !array_key_exists('event_date', $row)) {
+            return null;
+        }
+        if ('event_closed' === $key) {
+            return !empty($row[$key]) ? '1' : '0';
+        }
+        return isset($row[$key]) && is_scalar($row[$key]) ? (string) $row[$key] : '';
+    }
+
     public function bricks_render_tag($tag, $post = null, $context = 'text') {
         if (!is_string($tag)) {
             return $tag;
         }
-        $key = trim($tag, '{}');
+        $raw = trim($tag);
+        if ('{' === substr($raw, 0, 1) && '}' === substr($raw, -1)) {
+            $raw = substr($raw, 1, -1);
+        }
+        $parts = explode(':', $raw);
+        $key = array_shift($parts);
+        $legacy = array(
+            'tgb_greeting' => 'ulhgr_greeting',
+            'tgb_date' => 'ulhgr_date',
+            'tgb_both' => 'ulhgr_both',
+            'tgb_schedule' => 'ulhgr_schedule',
+        );
+        if (isset($legacy[$key])) {
+            $key = $legacy[$key];
+        }
         if (in_array($key, array('ulhgr_day', 'ulhgr_hours', 'ulhgr_state', 'ulhgr_key', 'ulhgr_today', 'ulhgr_row_date', 'ulhgr_row_is_special', 'ulhgr_row_special_label', 'ulhgr_row_link_url', 'ulhgr_row_link_label'), true) && class_exists('\\Bricks\\Query') && 'ulhgr_schedule' === \Bricks\Query::get_query_object_type()) {
             $value = $this->bricks_schedule_field(substr($key, 6));
             return null === $value ? $tag : esc_html($value);
+        }
+        if (in_array($key, array('ulhgr_event_date', 'ulhgr_event_date_label', 'ulhgr_event_title', 'ulhgr_event_message', 'ulhgr_event_hours', 'ulhgr_event_closed', 'ulhgr_event_link_url', 'ulhgr_event_link_label'), true) && class_exists('\\Bricks\\Query') && 'ulhgr_special_dates' === \Bricks\Query::get_query_object_type()) {
+            $value = $this->bricks_special_date_field(substr($key, 6));
+            if (null === $value) {
+                return $tag;
+            }
+            return 'ulhgr_event_link_url' === $key ? esc_url($value) : esc_html($value);
         }
         if (!in_array($key, array('ulhgr_greeting', 'ulhgr_date', 'ulhgr_both', 'ulhgr_schedule', 'ulhgr_status', 'ulhgr_status_label', 'ulhgr_is_open', 'ulhgr_next_change', 'ulhgr_special_label', 'ulhgr_special_link_url', 'ulhgr_special_link_label'), true)) {
             return $tag;
@@ -1334,26 +1419,12 @@ class Uplink_Hours_Greetings_Plugin {
     }
 
     public function bricks_render_content($content, $post = null, $context = 'text') {
-        if (!is_string($content) || false === strpos($content, '{ulhgr_')) {
+        if (!is_string($content) || (false === strpos($content, '{ulhgr_') && false === strpos($content, '{tgb_'))) {
             return $content;
         }
-        foreach (array('day', 'hours', 'state', 'key', 'today', 'row_date', 'row_is_special', 'row_special_label', 'row_link_url', 'row_link_label') as $key) {
-            $value = $this->bricks_schedule_field($key);
-            if (null !== $value) {
-                $content = str_replace('{ulhgr_' . $key . '}', esc_html($value), $content);
-            }
-        }
-        foreach (array('greeting', 'date', 'both', 'schedule', 'status') as $key) {
-            $content = str_replace('{ulhgr_' . $key . '}', esc_html($this->plain_value($key)), $content);
-        }
-        $status = $this->current_status_for_builders();
-        $content = str_replace('{ulhgr_status_label}', esc_html($status['label']), $content);
-        $content = str_replace('{ulhgr_is_open}', $status['is_open'] ? '1' : '0', $content);
-        $content = str_replace('{ulhgr_next_change}', esc_html($status['next_change']['time'] ?? ''), $content);
-        $content = str_replace('{ulhgr_special_label}', esc_html($status['special_label']), $content);
-        $content = str_replace('{ulhgr_special_link_url}', esc_url($status['special_link_url']), $content);
-        $content = str_replace('{ulhgr_special_link_label}', esc_html($status['special_link_label']), $content);
-        return $content;
+        return preg_replace_callback('/\{(?:ulhgr|tgb)_[^{}]+\}/', function ($match) use ($post, $context) {
+            return $this->bricks_render_tag($match[0], $post, $context);
+        }, $content);
     }
 
     private function current_status_for_builders() {
@@ -2140,20 +2211,34 @@ class Uplink_Hours_Greetings_Plugin {
     /** Usage and appearance guidance for every supported editor. */
     private function render_how_to_tab() {
         ?>
-        <div class="ulhgr-usage-grid">
-            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use Uplink Hours & Greetings for greeting, date, status, or weekly schedule output. Use the separate Uplink Special Dates block to show one selected date or a configurable list of upcoming holidays, closures, and sales dates.', 'uplink-hours-greetings'); ?></p></section>
-            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('BRICKS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. The current week automatically includes special-date overrides.', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_day}</code> <code>{ulhgr_hours}</code> <code>{ulhgr_state}</code> <code>{ulhgr_key}</code> <code>{ulhgr_today}</code> <code>{ulhgr_row_date}</code> <code>{ulhgr_row_is_special}</code> <code>{ulhgr_row_special_label}</code> <code>{ulhgr_row_link_url}</code> <code>{ulhgr_row_link_label}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [uplink_hours_greetings display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_greeting}</code> <code>{ulhgr_date}</code> <code>{ulhgr_both}</code> <code>{ulhgr_status}</code> <code>{ulhgr_status_label}</code> <code>{ulhgr_is_open}</code> <code>{ulhgr_next_change}</code> <code>{ulhgr_special_label}</code> <code>{ulhgr_special_link_url}</code> <code>{ulhgr_special_link_label}</code> <code>{ulhgr_schedule}</code></p></section>
+        <div class="ulhgr-guide-tabs" role="tablist" aria-label="<?php esc_attr_e('How to use Uplink Hours & Greetings', 'uplink-hours-greetings'); ?>">
+            <button type="button" id="ulhgr-guide-tab-blocks" class="ulhgr-guide-tab is-active" role="tab" aria-selected="true" aria-controls="ulhgr-guide-panel-blocks" data-ulhgr-guide-tab="blocks"><?php esc_html_e('Blocks and shortcodes', 'uplink-hours-greetings'); ?></button>
+            <button type="button" id="ulhgr-guide-tab-etch" class="ulhgr-guide-tab" role="tab" aria-selected="false" aria-controls="ulhgr-guide-panel-etch" tabindex="-1" data-ulhgr-guide-tab="etch"><?php esc_html_e('Etch', 'uplink-hours-greetings'); ?></button>
+            <button type="button" id="ulhgr-guide-tab-bricks" class="ulhgr-guide-tab" role="tab" aria-selected="false" aria-controls="ulhgr-guide-panel-bricks" tabindex="-1" data-ulhgr-guide-tab="bricks"><?php esc_html_e('Bricks Builder', 'uplink-hours-greetings'); ?></button>
+        </div>
+
+        <div id="ulhgr-guide-panel-blocks" class="ulhgr-guide-panel" role="tabpanel" aria-labelledby="ulhgr-guide-tab-blocks" data-ulhgr-guide-panel="blocks">
+            <div class="ulhgr-usage-grid">
+                <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Insert Uplink Hours & Greetings, then choose greeting, date, greeting and date, live status, or weekly schedule in the block sidebar. Insert Uplink Special Dates to show one saved event or a list of upcoming events.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('Business-hour output uses entries marked Opening and Closing. Greeting-only entries can remain set to None.', 'uplink-hours-greetings'); ?></p></section>
+                <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="status"]</code> <code>[uplink_hours_greetings display="schedule"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p></section>
+                <section class="ulhgr-panel ulhgr-appearance-guide"><p class="ulhgr-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Blocks inherit the theme colors and typography. Block sidebar controls can set color, spacing, and type. The Special Dates block adds layout spacing only, so event titles, links, and other text follow the block and theme styles.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('The ready-made schedule uses these classes:', 'uplink-hours-greetings'); ?></p><p><code>.ulhgr-schedule</code> <code>.ulhgr-schedule__day</code> <code>.ulhgr-schedule__name</code> <code>.ulhgr-schedule__hours</code> <code>.ulhgr-schedule__interval</code> <code>.ulhgr-schedule__status</code></p></section>
+            </div>
+        </div>
+
+        <div id="ulhgr-guide-panel-etch" class="ulhgr-guide-panel" role="tabpanel" aria-labelledby="ulhgr-guide-tab-etch" data-ulhgr-guide-panel="etch" hidden>
             <section class="ulhgr-panel ulhgr-etch-guide"><p class="ulhgr-overline"><?php esc_html_e('ETCH', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Options data', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-hours-greetings'); ?></p>
                 <h3><?php esc_html_e('Ready-made outputs', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.greeting}</code> <code>{options.uplink_hours_greetings.date}</code> <code>{options.uplink_hours_greetings.both}</code> <code>{options.uplink_hours_greetings.status_output}</code> <code>{options.uplink_hours_greetings.schedule}</code></p>
-                <h3><?php esc_html_e('Current and upcoming values', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.timezone}</code> <code>{options.uplink_hours_greetings.timezone_abbr}</code> <code>{options.uplink_hours_greetings.now.time}</code> <code>{options.uplink_hours_greetings.now.date}</code> <code>{options.uplink_hours_greetings.now.timestamp}</code></p><p><code>{options.uplink_hours_greetings.current.label}</code> <code>{options.uplink_hours_greetings.current.timing}</code> <code>{options.uplink_hours_greetings.current.start}</code> <code>{options.uplink_hours_greetings.current.event}</code> <code>{options.uplink_hours_greetings.current.message}</code> <code>{options.uplink_hours_greetings.current.output}</code></p><p><code>{options.uplink_hours_greetings.next.label}</code> <code>{options.uplink_hours_greetings.next.timing}</code> <code>{options.uplink_hours_greetings.next.time}</code> <code>{options.uplink_hours_greetings.next.countdown}</code> <code>{options.uplink_hours_greetings.next.event}</code> <code>{options.uplink_hours_greetings.next.message}</code> <code>{options.uplink_hours_greetings.next.start}</code> <code>{options.uplink_hours_greetings.next.timestamp}</code></p><p><code>{options.uplink_hours_greetings.opening.label}</code> <code>{options.uplink_hours_greetings.opening.timing}</code> <code>{options.uplink_hours_greetings.opening.time}</code> <code>{options.uplink_hours_greetings.opening.countdown}</code> <code>{options.uplink_hours_greetings.opening.event}</code> <code>{options.uplink_hours_greetings.opening.message}</code> <code>{options.uplink_hours_greetings.opening.start}</code> <code>{options.uplink_hours_greetings.opening.timestamp}</code></p>
-                <h3><?php esc_html_e('Live status and special dates', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.is_open}</code> <code>{options.uplink_hours_greetings.status}</code> <code>{options.uplink_hours_greetings.status_label}</code> <code>{options.uplink_hours_greetings.current_window.start_label}</code> <code>{options.uplink_hours_greetings.current_window.end_label}</code> <code>{options.uplink_hours_greetings.next_change.type}</code> <code>{options.uplink_hours_greetings.next_change.time}</code> <code>{options.uplink_hours_greetings.next_change.countdown}</code> <code>{options.uplink_hours_greetings.special_label}</code> <code>{options.uplink_hours_greetings.special_link_url}</code> <code>{options.uplink_hours_greetings.special_link_label}</code></p>
-                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Add an Etch Loop block. Set Target to options.uplink_hours_greetings.week and Item ID to day. Inside it, build the row with native elements and these values:', 'uplink-hours-greetings'); ?></p><p><code>{day.day}</code> <code>{day.date}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code> <code>{day.is_special}</code> <code>{day.special_label}</code> <code>{day.special_link_url}</code> <code>{day.special_link_label}</code></p><p><?php esc_html_e('Each day also includes windows. A separate loop is available at options.uplink_hours_greetings.special_dates.', 'uplink-hours-greetings'); ?></p>
+                <h3><?php esc_html_e('Live status', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.is_open}</code> <code>{options.uplink_hours_greetings.status}</code> <code>{options.uplink_hours_greetings.status_label}</code> <code>{options.uplink_hours_greetings.current_window.start_label}</code> <code>{options.uplink_hours_greetings.current_window.end_label}</code> <code>{options.uplink_hours_greetings.next_change.type}</code> <code>{options.uplink_hours_greetings.next_change.time}</code> <code>{options.uplink_hours_greetings.next_change.countdown}</code></p>
+                <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Add an Etch Loop block. Set Target to options.uplink_hours_greetings.week and Item ID to day. Build the row with native elements:', 'uplink-hours-greetings'); ?></p><p><code>{day.day}</code> <code>{day.date}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code> <code>{day.is_special}</code> <code>{day.special_label}</code> <code>{day.special_link_url}</code> <code>{day.special_link_label}</code></p>
+                <h3><?php esc_html_e('Special dates loop', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Loop over options.uplink_hours_greetings.special_dates and choose an item ID such as special. Each item includes date, label, message, closed, windows, link_url, and link_label.', 'uplink-hours-greetings'); ?></p><p><code>{special.date}</code> <code>{special.label}</code> <code>{special.message}</code> <code>{special.closed}</code> <code>{special.link_url}</code> <code>{special.link_label}</code></p>
             </section>
-            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="status"]</code> <code>[uplink_hours_greetings display="schedule"]</code> <code>[uplink_hours_greetings display="special_dates"]</code></p><p><code>[uplink_hours_greetings display="special_dates" special_date_mode="single" special_date="2026-11-27"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Special-date output also accepts special_date_limit, show_message, show_hours, and show_link.', 'uplink-hours-greetings'); ?></p></section>
-            <section class="ulhgr-panel ulhgr-appearance-guide"><p class="ulhgr-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-hours-greetings'); ?></p><pre class="ulhgr-css-example"><code>.wp-block-uplink-hours-greetings-hours-greetings {
-    --ulhgr-greeting-font-weight: 600;
-    --ulhgr-date-font-style: italic;
-}</code></pre><p><?php esc_html_e('The ready-made schedule uses these classes:', 'uplink-hours-greetings'); ?></p><p><code>.ulhgr-schedule</code> <code>.ulhgr-schedule__day</code> <code>.ulhgr-schedule__name</code> <code>.ulhgr-schedule__hours</code> <code>.ulhgr-schedule__interval</code> <code>.ulhgr-schedule__status</code></p></section>
+        </div>
+
+        <div id="ulhgr-guide-panel-bricks" class="ulhgr-guide-panel" role="tabpanel" aria-labelledby="ulhgr-guide-tab-bricks" data-ulhgr-guide-panel="bricks" hidden>
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('BRICKS BUILDER', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Add a non-looping wrapper for the layout. Inside it, add a Div or Block, enable Query Loop on that inner element, and choose Uplink Weekly Schedule. Add text elements inside the repeating row and bind these tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_day}</code> <code>{ulhgr_hours}</code> <code>{ulhgr_state}</code> <code>{ulhgr_key}</code> <code>{ulhgr_today}</code> <code>{ulhgr_row_date}</code> <code>{ulhgr_row_is_special}</code> <code>{ulhgr_row_special_label}</code> <code>{ulhgr_row_link_url}</code> <code>{ulhgr_row_link_label}</code></p><p><?php esc_html_e('Row tags only resolve inside the Uplink Weekly Schedule loop. Business-hour values require Opening and Closing events in the assigned schedule.', 'uplink-hours-greetings'); ?></p>
+                <h3><?php esc_html_e('Load special events', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Add another inner Div or Block, enable Query Loop, and choose Uplink Special Dates. It returns upcoming saved events in date order. Build each event with these tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_event_date}</code> <code>{ulhgr_event_date_label}</code> <code>{ulhgr_event_title}</code> <code>{ulhgr_event_message}</code> <code>{ulhgr_event_hours}</code> <code>{ulhgr_event_closed}</code> <code>{ulhgr_event_link_url}</code> <code>{ulhgr_event_link_label}</code></p>
+                <h3><?php esc_html_e('Direct tags', 'uplink-hours-greetings'); ?></h3><p><code>{ulhgr_greeting}</code> <code>{ulhgr_date}</code> <code>{ulhgr_both}</code> <code>{ulhgr_status}</code> <code>{ulhgr_status_label}</code> <code>{ulhgr_is_open}</code> <code>{ulhgr_next_change}</code> <code>{ulhgr_special_label}</code> <code>{ulhgr_special_link_url}</code> <code>{ulhgr_special_link_label}</code> <code>{ulhgr_schedule}</code></p><p><?php esc_html_e('For ready-made semantic markup, use a Bricks Shortcode element with [uplink_hours_greetings display="schedule"].', 'uplink-hours-greetings'); ?></p>
+            </section>
         </div>
         <?php
     }
