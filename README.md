@@ -32,6 +32,10 @@ To build an upcoming events list in Bricks, enable Query Loop on an inner Div or
 
 `{ulhgr_special_label}`, `{ulhgr_special_link_url}`, and `{ulhgr_special_link_label}` are direct status tags for the special-date override active today. They return an empty value on a regular date. Use `{ulhgr_event_title}` and the other event tags when building an upcoming special dates loop.
 
+For one upcoming event without a loop, use `{ulhgr_next_special_date}`, `{ulhgr_next_special_date_label}`, `{ulhgr_next_special_label}`, `{ulhgr_next_special_message}`, `{ulhgr_next_special_hours}`, `{ulhgr_next_special_closed}`, `{ulhgr_next_special_link_url}`, and `{ulhgr_next_special_link_label}`. These return fields from the first upcoming saved special date.
+
+The Bricks dynamic data picker separates plugin tags into **Uplink — Direct (no loop)**, **Uplink — Weekly Schedule Loop**, and **Uplink — Special Dates Loop** groups.
+
 Etch receives an ordered `week` array that follows WordPress's **Week Starts On** setting. Add an Etch Loop block, set **Target** to `options.uplink_hours_greetings.week`, and set **Item ID** to `day`. Inside it, use `{day.day}`, `{day.hours}`, `{day.state}`, `{day.key}`, `{day.number}`, and `{day.is_today}` in native Etch elements. Each day also has a `windows` array. To customize each opening and closing value, add a nested Loop block with **Target** `day.windows` and **Item ID** `window`, then use `{window.start}`, `{window.start_label}`, `{window.end}`, `{window.end_label}`, `{window.end_type}`, and `{window.overnight}`. `end_type` is `time`, `text`, or `none`, which lets a design render an untimed closing such as “Last Call” as text. Direct paths include `greeting`, `date`, `both`, `schedule`, `timezone`, `timezone_abbr`, `now.*`, `current.*`, `next.*`, `opening.*`, and `days.monday` through `days.sunday`.
 
 This repository includes installable source. Release-ready WordPress.org graphics live in `.wordpress-org/`; editable source graphics live in `wordpress-org-assets/` and are excluded from the plugin ZIP. See `readme.txt` for the public description.

@@ -42,7 +42,7 @@ Mark an entry as Opening. Use {opening_countdown} in an earlier message. {countd
 
 = How do I use it in Bricks? =
 
-For a weekly layout, enable Query Loop on an inner Div or Block and choose Uplink Weekly Schedule. Add child elements with {ulhgr_day} and {ulhgr_hours}; {ulhgr_state}, {ulhgr_key}, and {ulhgr_today} are also available inside the loop. To load upcoming events, choose Uplink Special Dates and use {ulhgr_event_date_label}, {ulhgr_event_title}, {ulhgr_event_message}, {ulhgr_event_hours}, {ulhgr_event_link_url}, and {ulhgr_event_link_label}. The direct {ulhgr_special_label} tag only describes a special-date override active today, so it is empty on a regular date. The How to Use tab contains the complete setup and tag lists. A Shortcode element with [uplink_hours_greetings display="schedule"] provides ready-made semantic schedule output.
+For a weekly layout, enable Query Loop on an inner Div or Block and choose Uplink Weekly Schedule. Add child elements with {ulhgr_day} and {ulhgr_hours}; {ulhgr_state}, {ulhgr_key}, and {ulhgr_today} are also available inside the loop. To load upcoming events, choose Uplink Special Dates and use {ulhgr_event_date_label}, {ulhgr_event_title}, {ulhgr_event_message}, {ulhgr_event_hours}, {ulhgr_event_link_url}, and {ulhgr_event_link_label}. The direct {ulhgr_special_label} tag only describes a special-date override active today, so it is empty on a regular date. For one upcoming event without a loop, use {ulhgr_next_special_label} with the other next_special tags listed in the How to Use tab. The Bricks picker groups tags by Direct, Weekly Schedule Loop, and Special Dates Loop. A Shortcode element with [uplink_hours_greetings display="schedule"] provides ready-made semantic schedule output.
 
 = How do I use it in Etch? =
 
@@ -61,6 +61,8 @@ Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [u
 * Added optional LocalBusiness structured data with special opening hours.
 * Added status and special-date values to Bricks and Etch integrations.
 * Added an Uplink Special Dates query source for building upcoming event lists in Bricks.
+* Added no-loop Bricks tags for the next upcoming special date.
+* Grouped Bricks dynamic tags by direct and required query-loop context.
 * Organized How to Use guidance into Blocks and shortcodes, Etch, and Bricks Builder tabs.
 * Added an open or closed status display to the block and shortcode.
 
