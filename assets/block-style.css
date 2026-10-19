@@ -33,7 +33,7 @@
 .ulhgr-special-dates__item{margin:0;padding:0}
 .ulhgr-special-date-card__header{display:grid;gap:.25rem}
 .ulhgr-special-date-card__date{display:block}
-.ulhgr-special-date-card__title{margin:0}
+.ulhgr-special-date-card__title{margin:0;color:inherit}
 .ulhgr-special-date-card__hours{margin-block-start:.55rem}
 .ulhgr-special-date-card__message{margin:.55rem 0 0}
 .ulhgr-special-date-card__link{margin:.55rem 0 0}
