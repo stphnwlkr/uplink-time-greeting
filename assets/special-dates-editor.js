@@ -58,6 +58,11 @@
                         label: __('Show message', 'uplink-hours-greetings'),
                         checked: attributes.showMessage,
                         onChange: (showMessage) => setAttributes({ showMessage })
+                    }),
+                    el(ToggleControl, {
+                        label: __('Show link', 'uplink-hours-greetings'),
+                        checked: attributes.showLink,
+                        onChange: (showLink) => setAttributes({ showLink })
                     })
                 )
             ),
@@ -85,7 +90,8 @@
             limit: { type: 'integer', default: 5 },
             dateFormat: { type: 'string', default: 'F j, Y' },
             showMessage: { type: 'boolean', default: true },
-            showHours: { type: 'boolean', default: true }
+            showHours: { type: 'boolean', default: true },
+            showLink: { type: 'boolean', default: true }
         },
         edit: Edit,
         save: () => null

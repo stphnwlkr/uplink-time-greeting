@@ -27,14 +27,15 @@
 .ulhgr-status__label{font-weight:700}
 .ulhgr-status__detail{opacity:.82}
 
-.ulhgr-special-dates{--ulhgr-special-gap:1rem;--ulhgr-special-padding:1.1rem;--ulhgr-special-border:color-mix(in srgb,currentColor 24%,transparent)}
+.ulhgr-special-dates{--ulhgr-special-gap:1rem}
+.ulhgr-special-dates--single{display:grid;gap:var(--ulhgr-special-gap)}
 .ulhgr-special-dates__list{display:grid;gap:var(--ulhgr-special-gap);margin:0;padding:0;list-style:none}
 .ulhgr-special-dates__item{margin:0;padding:0}
-.ulhgr-special-date-card{padding:var(--ulhgr-special-padding);border:1px solid var(--ulhgr-special-border);border-radius:.65rem}
-.ulhgr-special-date-card__header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.ulhgr-special-date-card__date{font-size:.9em;opacity:.72}
-.ulhgr-special-date-card__title{margin:0;font:inherit;font-weight:700}
-.ulhgr-special-date-card__hours{margin-block-start:.55rem;font-weight:600}
+.ulhgr-special-date-card__header{display:grid;gap:.25rem}
+.ulhgr-special-date-card__date{display:block}
+.ulhgr-special-date-card__title{margin:0}
+.ulhgr-special-date-card__hours{margin-block-start:.55rem}
 .ulhgr-special-date-card__message{margin:.55rem 0 0}
+.ulhgr-special-date-card__link{margin:.55rem 0 0}
 .ulhgr-special-date-card__separator{margin-inline:.25em}
 .ulhgr-special-dates__empty{margin:0}

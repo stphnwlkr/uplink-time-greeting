@@ -358,6 +358,9 @@
                 '<div class="ulhgr-special-windows">' + windowMarkup(base, 0, '09:00', '17:00') + '</div>' +
                 '<button type="button" class="button ulhgr-add-special-window">' + ulhgrAdmin.addHoursWindow + '</button>' +
                 '<label class="ulhgr-special-message">' + ulhgrAdmin.messageOptional + '<textarea name="' + base + '[message]" rows="2"></textarea></label>' +
+                '<div class="ulhgr-special-link-fields">' +
+                '<label>' + ulhgrAdmin.destinationUrl + '<input type="url" name="' + base + '[link_url]" placeholder="https://example.com/special-event"></label>' +
+                '<label>' + ulhgrAdmin.linkLabel + '<input type="text" name="' + base + '[link_label]" maxlength="100" placeholder="Learn more"></label></div>' +
                 '<button type="button" class="button ulhgr-remove-special-date">' + ulhgrAdmin.removeSpecialDate + '</button></div>';
             container.append(card);
             syncCard(card);

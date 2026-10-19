@@ -24,7 +24,8 @@
         "limit": { "type": "integer", "default": 5, "minimum": 1, "maximum": 20 },
         "dateFormat": { "type": "string", "default": "F j, Y" },
         "showMessage": { "type": "boolean", "default": true },
-        "showHours": { "type": "boolean", "default": true }
+        "showHours": { "type": "boolean", "default": true },
+        "showLink": { "type": "boolean", "default": true }
     },
     "editorScript": "ulhgr-special-dates-editor",
     "editorStyle": "file:../../assets/style.css",

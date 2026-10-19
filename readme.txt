@@ -46,11 +46,11 @@ For a custom layout, enable Query Loop on a Div or Container and choose Uplink W
 
 = How do I use it in Etch? =
 
-Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item ID day. Build the row with native Etch elements and use {day.day}, {day.date}, {day.hours}, {day.state}, {day.key}, {day.number}, {day.is_today}, {day.is_special}, and {day.special_label}. Direct data includes greeting, date, both, status_output, schedule, is_open, status, status_label, current_window, next_change, special_dates, timezone, now, current, next, opening, and days. The plugin's How to Use tab lists every path.
+Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item ID day. Build the row with native Etch elements and use {day.day}, {day.date}, {day.hours}, {day.state}, {day.key}, {day.number}, {day.is_today}, {day.is_special}, {day.special_label}, {day.special_link_url}, and {day.special_link_label}. Direct data includes greeting, date, both, status_output, schedule, is_open, status, status_label, current_window, next_change, special_dates, timezone, now, current, next, opening, and days. The plugin's How to Use tab lists every path.
 
 = Is there a shortcode? =
 
-Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [uplink_hours_greetings display="schedule"], or [uplink_hours_greetings display="special_dates"]. For one saved date, add special_date_mode="single" and special_date="YYYY-MM-DD". Upcoming lists accept special_date_limit, show_message, and show_hours.
+Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [uplink_hours_greetings display="schedule"], or [uplink_hours_greetings display="special_dates"]. For one saved date, add special_date_mode="single" and special_date="YYYY-MM-DD". Upcoming lists accept special_date_limit, show_message, show_hours, and show_link. Each saved special date can include an optional destination URL and link label.
 
 == Changelog ==
 

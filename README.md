@@ -12,11 +12,13 @@ Message tokens: `{time}`, `{tz}`, `{countdown}`, `{next_label}`, `{next_time}`, 
 
 Administrators can use the **Permissions** tab to allow additional roles or individual users to update plugin settings. Administrators always retain access. The admin tabs switch in place, so schedule edits remain on the page while moving between sections. **How to Use** is the final tab and contains every editor integration plus appearance guidance.
 
+Special dates can include a destination URL and link label for an event, sale, holiday notice, or dedicated detail page. The Special Dates block can show one saved date or an upcoming list, with separate controls for hours, message, and link visibility. Its output is stacked and inherits the theme's visual styling; the plugin only supplies the list and spacing layout.
+
 | Editor | Insert |
 | --- | --- |
 | WordPress block editor | **Uplink Hours & Greetings** for greeting, date, status, or schedule; **Uplink Special Dates** for one saved date or an upcoming list. |
-| Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{ulhgr_day}` and `{ulhgr_hours}` in child elements. A Shortcode element with `[uplink_hours_greetings display="schedule"]` provides ready-made semantic markup. `{ulhgr_schedule}` remains available as inline plain text. |
-| Etch | Loop over `options.uplink_hours_greetings.week` to build a schedule with your own HTML and classes. Complete outputs, current and next entries, next opening, timezone, current clock, individual days, and machine-readable windows are available under `options.uplink_hours_greetings`. |
+| Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{ulhgr_day}` and `{ulhgr_hours}` in child elements. Special-date rows also provide `{ulhgr_row_special_label}`, `{ulhgr_row_link_url}`, and `{ulhgr_row_link_label}`. A Shortcode element with `[uplink_hours_greetings display="schedule"]` provides ready-made semantic markup. |
+| Etch | Loop over `options.uplink_hours_greetings.week` to build a schedule with your own HTML and classes. Special-date links are included in both `week` rows and the `special_dates` array. Complete outputs, current and next entries, next opening, timezone, current clock, individual days, and machine-readable windows are available under `options.uplink_hours_greetings`. |
 | Shortcode | `[uplink_hours_greetings]`, `[uplink_hours_greetings display="status"]`, `[uplink_hours_greetings display="schedule"]`, or `[uplink_hours_greetings display="special_dates"]`. |
 | PHP | `uplink_hours_greetings_echo( array( 'display' => 'both' ) );` |
 
