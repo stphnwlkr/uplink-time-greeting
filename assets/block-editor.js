@@ -115,6 +115,7 @@
                             { label: __('Greeting Only', 'uplink-hours-greetings'), value: 'greeting' },
                             { label: __('Date Only', 'uplink-hours-greetings'), value: 'date' },
                             { label: __('Both Greeting and Date', 'uplink-hours-greetings'), value: 'both' },
+                            { label: __('Open or Closed Status', 'uplink-hours-greetings'), value: 'status' },
                             { label: __('Weekly Schedule', 'uplink-hours-greetings'), value: 'schedule' }
                         ],
                         onChange: (value) => setAttributes({ display: value }),

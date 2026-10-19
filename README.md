@@ -1,6 +1,6 @@
 # Uplink Hours & Greetings
 
-A seven-day business schedule, greeting, countdown, and local date for WordPress, Bricks, Etch, and shortcodes. Version **1.0.1**.
+A seven-day schedule, special-date overrides, live open status, greetings, countdowns, and local dates for WordPress, Bricks, Etch, and shortcodes. Version **1.1.0**.
 
 ## Set up a week
 

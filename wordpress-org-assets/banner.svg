@@ -1,8 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1544 500" role="img" aria-labelledby="title desc">
-  <title id="title">Uplink Hours &amp; Greetings</title><desc id="desc">Plugin banner showing the real output preview interface.</desc>
-  <defs><linearGradient id="bg" x1="0" y1="0" x2="1544" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#061e40"/><stop offset="1" stop-color="#0a4780"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#00152f" flood-opacity=".38"/></filter><clipPath id="ui"><rect x="836" y="54" width="646" height="392" rx="18"/></clipPath></defs>
-  <rect width="1544" height="500" fill="url(#bg)"/><circle cx="1440" cy="55" r="300" fill="#0b69aa" opacity=".22"/>
-  <g transform="translate(64 48)"><rect width="66" height="66" rx="16" fill="#f8fbff"/><g transform="translate(10 12) scale(.031)"><path fill="#003362" d="M899.89 228.83h181.94c92.1 0 167.45 75.39 167.45 167.54s-75.39 167.54-167.45 167.54H864.3v228.83h217.56c217.89 0 396.14-178.34 396.14-396.37S1299.65 0 1081.86 0h-304.3c40.89 76.2 81.59 152.53 122.33 228.83Z"/><path fill="#0071cc" d="M563.62 387.93v404.78c0 92.08-75.32 167.54-167.45 167.54s-167.45-75.39-167.45-167.54V396.34H0v396.4c0 217.96 178.25 396.33 396.17 396.33s396.17-178.34 396.17-396.33V387.77c14.22 4.88 29.19 10.58 45.16 16.95 30.84 12.32 65.56-13.33 49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68 114.79-120.13 224.69-181.36 339.25-16.42 34.61 18.33 60.26 49.14 47.93 16.1-6.44 31.13-12.03 45.35-16.79Z"/></g><text x="88" y="28" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="700">Uplink Plugins</text><text x="88" y="49" fill="#add5f2" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" letter-spacing="3">WORDPRESS TOOLS</text></g>
-  <g font-family="Arial,Helvetica,sans-serif"><text x="64" y="183" fill="#9dd6fa" font-size="14" font-weight="700" letter-spacing="5">INTRODUCING</text><text x="64" y="249" fill="#fff" font-size="58" font-weight="750">Hours &amp; Greetings</text><rect x="65" y="277" width="158" height="7" rx="3.5" fill="#ffca3a"/><text x="64" y="332" fill="#dcecf8" font-size="25">Weekly hours, timed messages and countdowns.</text><text x="64" y="382" fill="#b9d8ed" font-size="16">WORDPRESS BLOCK  ·  BRICKS  ·  ETCH  ·  SHORTCODE</text></g>
-  <rect x="824" y="42" width="670" height="416" rx="24" fill="#00162f" opacity=".5" filter="url(#shadow)"/><rect x="830" y="48" width="658" height="404" rx="21" fill="#fff"/><image href="real-ui-preview.png" x="836" y="54" width="646" height="392" preserveAspectRatio="xMidYMid slice" clip-path="url(#ui)"/>
+  <title id="title">Uplink Hours &amp; Greetings</title>
+  <desc id="desc">WordPress plugin banner with live status, special dates, and a real admin preview.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1544" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#041b3a"/><stop offset=".58" stop-color="#073c70"/><stop offset="1" stop-color="#0874c9"/></linearGradient>
+    <linearGradient id="glow" x1="1060" y1="30" x2="1410" y2="470" gradientUnits="userSpaceOnUse"><stop stop-color="#8fddff" stop-opacity=".55"/><stop offset="1" stop-color="#0277cf" stop-opacity="0"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#00152f" flood-opacity=".38"/></filter>
+    <filter id="smallShadow" x="-30%" y="-40%" width="160%" height="190%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#00152f" flood-opacity=".24"/></filter>
+    <clipPath id="ui"><rect x="848" y="205" width="620" height="238" rx="17"/></clipPath>
+    <pattern id="dots" width="19" height="19" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#fff" opacity=".22"/></pattern>
+  </defs>
+  <rect width="1544" height="500" fill="url(#bg)"/>
+  <circle cx="1280" cy="150" r="410" fill="url(#glow)"/>
+  <path d="M1125-20h440v285c-133 38-285 8-440-90z" fill="url(#dots)" opacity=".8"/>
+  <path d="M0 448C270 391 441 421 655 500H0z" fill="#fff" opacity=".055"/>
+  <g transform="translate(58 38)">
+    <rect width="62" height="62" rx="15" fill="#f8fbff"/>
+    <g transform="translate(9 11) scale(.029)"><path fill="#003362" d="M899.89 228.83h181.94c92.1 0 167.45 75.39 167.45 167.54s-75.39 167.54-167.45 167.54H864.3v228.83h217.56c217.89 0 396.14-178.34 396.14-396.37S1299.65 0 1081.86 0h-304.3c40.89 76.2 81.59 152.53 122.33 228.83Z"/><path fill="#0071cc" d="M563.62 387.93v404.78c0 92.08-75.32 167.54-167.45 167.54s-167.45-75.39-167.45-167.54V396.34H0v396.4c0 217.96 178.25 396.33 396.17 396.33s396.17-178.34 396.17-396.33V387.77c14.22 4.88 29.19 10.58 45.16 16.95 30.84 12.32 65.56-13.33 49.17-47.93-61.23-114.56-119.68-224.49-181.36-339.22-12.58-23.38-42.28-23.38-54.83-.03-61.68 114.79-120.13 224.69-181.36 339.25-16.42 34.61 18.33 60.26 49.14 47.93 16.1-6.44 31.13-12.03 45.35-16.79Z"/></g>
+    <text x="82" y="26" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700">Uplink Plugins</text>
+    <text x="82" y="47" fill="#a9d5ee" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" letter-spacing="3">WORDPRESS EDITORIAL TOOLS</text>
+  </g>
+  <g font-family="Arial,Helvetica,sans-serif">
+    <text x="60" y="169" fill="#93cff2" font-size="13" font-weight="700" letter-spacing="4">YOUR HOURS, IN CONTEXT</text>
+    <text x="60" y="232" fill="#fff" font-size="52" font-weight="750">Hours that know</text>
+    <text x="60" y="289" fill="#fff" font-size="52" font-weight="750">what day it is.</text>
+    <rect x="61" y="315" width="142" height="7" rx="3.5" fill="#ffca3a"/>
+    <text x="60" y="361" fill="#dbeaf5" font-size="21">Weekly schedules, special dates and live status.</text>
+    <g transform="translate(60 396)" font-size="12" font-weight="700" letter-spacing="1.3">
+      <g><rect width="126" height="34" rx="17" fill="#fff" opacity=".12"/><text x="18" y="22" fill="#fff">WORDPRESS</text></g>
+      <g transform="translate(136)"><rect width="84" height="34" rx="17" fill="#fff" opacity=".12"/><text x="19" y="22" fill="#fff">BRICKS</text></g>
+      <g transform="translate(230)"><rect width="72" height="34" rx="17" fill="#fff" opacity=".12"/><text x="18" y="22" fill="#fff">ETCH</text></g>
+      <g transform="translate(312)"><rect width="116" height="34" rx="17" fill="#fff" opacity=".12"/><text x="14" y="22" fill="#fff">SHORTCODE</text></g>
+    </g>
+  </g>
+  <g filter="url(#smallShadow)" font-family="Arial,Helvetica,sans-serif">
+    <g transform="translate(820 54)"><rect width="286" height="118" rx="18" fill="#fff"/><circle cx="37" cy="37" r="18" fill="#e7f7ef"/><path d="m29 37 6 6 11-13" fill="none" stroke="#16875b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="68" y="35" fill="#16334c" font-size="12" font-weight="700" letter-spacing="1.5">LIVE STATUS</text><text x="28" y="76" fill="#16334c" font-size="26" font-weight="750">Open now</text><text x="28" y="99" fill="#5d7182" font-size="14">Closes at 5:00 PM</text></g>
+    <g transform="translate(1126 54)"><rect width="342" height="118" rx="18" fill="#fff"/><rect x="24" y="23" width="42" height="42" rx="10" fill="#fff1d2"/><path d="M34 35h22M37 29v8m16-8v8M34 41h22v15H34z" fill="none" stroke="#b57600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><text x="82" y="35" fill="#16334c" font-size="12" font-weight="700" letter-spacing="1.5">SPECIAL DATE</text><text x="82" y="61" fill="#16334c" font-size="20" font-weight="750">Holiday hours</text><text x="82" y="88" fill="#5d7182" font-size="14">10:00 AM – 2:00 PM</text></g>
+  </g>
+  <g filter="url(#shadow)"><rect x="836" y="193" width="644" height="262" rx="22" fill="#00162f" opacity=".42"/><rect x="842" y="199" width="632" height="250" rx="20" fill="#fff"/><image href="real-ui-preview.png" x="848" y="205" width="620" height="238" preserveAspectRatio="xMidYMid slice" clip-path="url(#ui)"/><rect x="848" y="205" width="620" height="238" rx="17" fill="none" stroke="#d8e4ea"/></g>
 </svg>

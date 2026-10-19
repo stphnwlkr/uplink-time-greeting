@@ -318,13 +318,87 @@
         });
     }
 
+    function initSpecialDates() {
+        const container = document.querySelector('.ulhgr-special-dates');
+        const addDate = document.querySelector('.ulhgr-add-special-date');
+        if (!container || !addDate) return;
+
+        function windowMarkup(base, index, open, close) {
+            return '<div class="ulhgr-special-window">' +
+                '<label>' + ulhgrAdmin.opens + '<input type="time" name="' + base + '[windows][' + index + '][open]" value="' + open + '"></label>' +
+                '<label>' + ulhgrAdmin.closes + '<input type="time" name="' + base + '[windows][' + index + '][close]" value="' + close + '"></label>' +
+                '<button type="button" class="button ulhgr-remove-special-window" aria-label="Remove hours window">&times;</button></div>';
+        }
+
+        function syncCard(card) {
+            const closed = card.querySelector('.ulhgr-special-closed').checked;
+            const windows = card.querySelector('.ulhgr-special-windows');
+            windows.hidden = closed;
+            card.querySelector('.ulhgr-add-special-window').hidden = closed;
+            card.querySelector('.ulhgr-special-date-state').textContent = closed ? ulhgrAdmin.closed : ulhgrAdmin.customHours;
+            const label = card.querySelector('.ulhgr-special-label-input').value.trim() || ulhgrAdmin.specialDate;
+            card.querySelector('summary strong').textContent = label;
+            card.querySelector('summary .ulhgr-special-date-summary span').textContent = card.querySelector('.ulhgr-special-date-input').value;
+            const removeButtons = card.querySelectorAll('.ulhgr-remove-special-window');
+            removeButtons.forEach(function (button) { button.disabled = removeButtons.length === 1; });
+        }
+
+        addDate.addEventListener('click', function () {
+            const index = Number(container.dataset.nextIndex || 0);
+            container.dataset.nextIndex = String(index + 1);
+            const base = 'ulhgr_settings[special_dates][' + index + ']';
+            const card = document.createElement('details');
+            card.className = 'ulhgr-special-date';
+            card.open = true;
+            card.innerHTML = '<summary><span class="ulhgr-special-date-summary"><strong>' + ulhgrAdmin.specialDate + '</strong><span></span></span><span class="ulhgr-special-date-state">' + ulhgrAdmin.customHours + '</span></summary>' +
+                '<div class="ulhgr-special-date-body"><div class="ulhgr-special-date-fields">' +
+                '<label>' + ulhgrAdmin.date + '<input type="date" class="ulhgr-special-date-input" name="' + base + '[date]" required></label>' +
+                '<label>' + ulhgrAdmin.label + '<input type="text" class="ulhgr-special-label-input" name="' + base + '[label]" maxlength="100"></label></div>' +
+                '<label class="ulhgr-checkbox-field"><input type="hidden" name="' + base + '[closed]" value="0"><input type="checkbox" class="ulhgr-special-closed" name="' + base + '[closed]" value="1">' + ulhgrAdmin.closedAllDay + '</label>' +
+                '<div class="ulhgr-special-windows">' + windowMarkup(base, 0, '09:00', '17:00') + '</div>' +
+                '<button type="button" class="button ulhgr-add-special-window">' + ulhgrAdmin.addHoursWindow + '</button>' +
+                '<label class="ulhgr-special-message">' + ulhgrAdmin.messageOptional + '<textarea name="' + base + '[message]" rows="2"></textarea></label>' +
+                '<button type="button" class="button ulhgr-remove-special-date">' + ulhgrAdmin.removeSpecialDate + '</button></div>';
+            container.append(card);
+            syncCard(card);
+            card.querySelector('.ulhgr-special-date-input').focus();
+        });
+
+        container.addEventListener('input', function (event) {
+            const card = event.target.closest('.ulhgr-special-date');
+            if (card) syncCard(card);
+        });
+        container.addEventListener('change', function (event) {
+            const card = event.target.closest('.ulhgr-special-date');
+            if (card) syncCard(card);
+        });
+        container.addEventListener('click', function (event) {
+            const card = event.target.closest('.ulhgr-special-date');
+            if (!card) return;
+            if (event.target.closest('.ulhgr-remove-special-date')) {
+                card.remove();
+            } else if (event.target.closest('.ulhgr-add-special-window')) {
+                const windows = card.querySelector('.ulhgr-special-windows');
+                if (windows.children.length >= 6) return;
+                const base = card.querySelector('.ulhgr-special-date-input').name.replace(/\[date\]$/, '');
+                windows.insertAdjacentHTML('beforeend', windowMarkup(base, windows.children.length, '09:00', '17:00'));
+                syncCard(card);
+            } else if (event.target.closest('.ulhgr-remove-special-window')) {
+                event.target.closest('.ulhgr-special-window').remove();
+                syncCard(card);
+            }
+        });
+        container.querySelectorAll('.ulhgr-special-date').forEach(syncCard);
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initTabs(); initToast(); initPermissionSearch(); initScheduler(); initPreview(); });
+        document.addEventListener('DOMContentLoaded', function () { initTabs(); initToast(); initPermissionSearch(); initScheduler(); initSpecialDates(); initPreview(); });
     } else {
         initTabs();
         initToast();
         initPermissionSearch();
         initScheduler();
+        initSpecialDates();
         initPreview();
     }
 })();
