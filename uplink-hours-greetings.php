@@ -85,10 +85,25 @@ class Uplink_Hours_Greetings_Plugin {
             'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'
         ), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
         wp_set_script_translations('ulhgr-editor', 'uplink-hours-greetings');
+        wp_register_script('ulhgr-special-dates-editor', UPLINK_HOURS_GREETINGS_PLUGIN_URL . 'assets/special-dates-editor.js', array(
+            'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'
+        ), UPLINK_HOURS_GREETINGS_PLUGIN_VERSION, true);
+        wp_set_script_translations('ulhgr-special-dates-editor', 'uplink-hours-greetings');
+        $special_date_options = array(array('label' => __('Select a special date', 'uplink-hours-greetings'), 'value' => ''));
+        foreach ($this->get_settings()['special_dates'] as $special) {
+            $special_date_options[] = array(
+                'label' => ($special['label'] ? $special['label'] . ' — ' : '') . $special['date'],
+                'value' => $special['date'],
+            );
+        }
+        wp_localize_script('ulhgr-special-dates-editor', 'ulhgrSpecialDates', array('dates' => $special_date_options));
         // Register the block using block.json
         if (function_exists('register_block_type')) {
             register_block_type(__DIR__, array(
                 'render_callback' => array($this, 'render_block'),
+            ));
+            register_block_type(__DIR__ . '/blocks/special-dates', array(
+                'render_callback' => array($this, 'render_special_dates_block'),
             ));
         }
     }
@@ -372,6 +387,23 @@ class Uplink_Hours_Greetings_Plugin {
         );
     }
 
+    /** Render the dedicated Special Dates block. */
+    public function render_special_dates_block($attributes, $content, $block) {
+        $attributes = wp_parse_args($attributes, array(
+            'mode' => 'upcoming',
+            'date' => '',
+            'limit' => 5,
+            'dateFormat' => 'F j, Y',
+            'showMessage' => true,
+            'showHours' => true,
+        ));
+        $html = $this->special_dates_html($attributes);
+        if ('' === $html) {
+            return '';
+        }
+        return sprintf('<div %s>%s</div>', get_block_wrapper_attributes(), $html);
+    }
+
     /**
      * Shortcode handler
      */
@@ -380,7 +412,12 @@ class Uplink_Hours_Greetings_Plugin {
             'display' => 'greeting',
             'date_format' => 'F j, Y',
             'timezone' => '',
-            'tz_abbr' => ''
+            'tz_abbr' => '',
+            'special_date_mode' => 'upcoming',
+            'special_date' => '',
+            'special_date_limit' => 5,
+            'show_message' => '1',
+            'show_hours' => '1',
         ), $atts, 'uplink_hours_greetings');
 
         // Convert to camelCase for consistency with block attributes
@@ -388,7 +425,12 @@ class Uplink_Hours_Greetings_Plugin {
             'display' => sanitize_text_field($attributes['display']),
             'dateFormat' => sanitize_text_field($attributes['date_format']),
             'timezone' => sanitize_text_field($attributes['timezone']),
-            'tzAbbr' => sanitize_text_field($attributes['tz_abbr'])
+            'tzAbbr' => sanitize_text_field($attributes['tz_abbr']),
+            'specialDateMode' => sanitize_key($attributes['special_date_mode']),
+            'specialDate' => sanitize_text_field($attributes['special_date']),
+            'specialDateLimit' => absint($attributes['special_date_limit']),
+            'showMessage' => !in_array(strtolower((string) $attributes['show_message']), array('0', 'false', 'no'), true),
+            'showHours' => !in_array(strtolower((string) $attributes['show_hours']), array('0', 'false', 'no'), true),
         );
 
         return $this->generate_greeting($normalized_attrs);
@@ -416,11 +458,22 @@ class Uplink_Hours_Greetings_Plugin {
         $tz_abbr = $tz_abbr_override ?: $settings['default_tz_abbr'];
 
         // Validate display option
-        if (!in_array($display, array('greeting', 'date', 'both', 'status', 'schedule'), true)) {
+        if (!in_array($display, array('greeting', 'date', 'both', 'status', 'schedule', 'special_dates'), true)) {
             $display = 'greeting';
         }
         if ('schedule' === $display) {
             return $this->schedule_html($attributes['previewAt'] ?? '');
+        }
+        if ('special_dates' === $display) {
+            return $this->special_dates_html(array(
+                'mode' => $attributes['specialDateMode'] ?? 'upcoming',
+                'date' => $attributes['specialDate'] ?? '',
+                'limit' => $attributes['specialDateLimit'] ?? 5,
+                'dateFormat' => $date_format,
+                'showMessage' => $attributes['showMessage'] ?? true,
+                'showHours' => $attributes['showHours'] ?? true,
+                'previewAt' => $attributes['previewAt'] ?? '',
+            ));
         }
 
         // Validate and sanitize date format
@@ -976,9 +1029,90 @@ class Uplink_Hours_Greetings_Plugin {
         return $html . '</dl>';
     }
 
+    /** Semantic output for one special date or a list of upcoming dates. */
+    private function special_dates_html($attributes = array()) {
+        $settings = $this->get_settings();
+        $mode = isset($attributes['mode']) && 'single' === $attributes['mode'] ? 'single' : 'upcoming';
+        $limit = min(20, max(1, absint($attributes['limit'] ?? 5)));
+        $date_format = $this->sanitize_date_format($attributes['dateFormat'] ?? get_option('date_format', 'F j, Y'));
+        $show_message = !isset($attributes['showMessage']) || (bool) $attributes['showMessage'];
+        $show_hours = !isset($attributes['showHours']) || (bool) $attributes['showHours'];
+        try {
+            $timezone = new DateTimeZone($settings['default_timezone'] ?: wp_timezone_string());
+        } catch (Exception $error) {
+            $timezone = wp_timezone();
+        }
+        $reference = new DateTimeImmutable('now', $timezone);
+        if (!empty($attributes['previewAt']) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $attributes['previewAt'])) {
+            $preview = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $attributes['previewAt'], $timezone);
+            if ($preview) $reference = $preview;
+        }
+        $dates = array();
+        if ('single' === $mode) {
+            $selected = isset($attributes['date']) ? (string) $attributes['date'] : '';
+            foreach ($settings['special_dates'] as $special) {
+                if ($special['date'] === $selected) {
+                    $dates[] = $special;
+                    break;
+                }
+            }
+        } else {
+            foreach ($settings['special_dates'] as $special) {
+                if ($special['date'] >= $reference->format('Y-m-d')) {
+                    $dates[] = $special;
+                }
+                if (count($dates) >= $limit) break;
+            }
+        }
+        if (!$dates) {
+            return '<p class="ulhgr-special-dates__empty">' . esc_html('single' === $mode ? __('Select a saved special date.', 'uplink-hours-greetings') : __('No upcoming special dates.', 'uplink-hours-greetings')) . '</p>';
+        }
+        $items = '';
+        foreach ($dates as $special) {
+            $date = DateTimeImmutable::createFromFormat('!Y-m-d', $special['date'], $timezone);
+            $date_label = $date ? wp_date($date_format, $date->getTimestamp(), $timezone) : $special['date'];
+            $state = !empty($special['closed']) ? 'closed' : 'custom-hours';
+            $body = '<article class="ulhgr-special-date-card ulhgr-special-date-card--' . esc_attr($state) . '" data-date="' . esc_attr($special['date']) . '" data-state="' . esc_attr($state) . '">';
+            $body .= '<header class="ulhgr-special-date-card__header"><time class="ulhgr-special-date-card__date" datetime="' . esc_attr($special['date']) . '">' . esc_html($date_label) . '</time>';
+            if ('' !== trim($special['label'])) {
+                $body .= '<h3 class="ulhgr-special-date-card__title">' . esc_html($special['label']) . '</h3>';
+            }
+            $body .= '</header>';
+            if ($show_hours) {
+                $body .= '<div class="ulhgr-special-date-card__hours">' . $this->special_date_hours_html($special, $timezone) . '</div>';
+            }
+            if ($show_message && '' !== trim($special['message'])) {
+                $body .= '<p class="ulhgr-special-date-card__message">' . nl2br(esc_html($special['message'])) . '</p>';
+            }
+            $body .= '</article>';
+            $items .= 'single' === $mode ? $body : '<li class="ulhgr-special-dates__item">' . $body . '</li>';
+        }
+        if ('single' === $mode) {
+            return '<div class="ulhgr-special-dates ulhgr-special-dates--single">' . $items . '</div>';
+        }
+        return '<section class="ulhgr-special-dates ulhgr-special-dates--upcoming" aria-label="' . esc_attr__('Upcoming special dates', 'uplink-hours-greetings') . '"><ol class="ulhgr-special-dates__list">' . $items . '</ol></section>';
+    }
+
+    private function special_date_hours_html($special, $timezone) {
+        if (!empty($special['closed'])) {
+            return '<span class="ulhgr-special-date-card__status">' . esc_html__('Closed', 'uplink-hours-greetings') . '</span>';
+        }
+        $time_format = get_option('time_format', 'g:i a');
+        $parts = array();
+        foreach ($special['windows'] as $window) {
+            $base = new DateTimeImmutable($special['date'], $timezone);
+            list($open_hour, $open_minute) = array_map('intval', explode(':', $window['open']));
+            list($close_hour, $close_minute) = array_map('intval', explode(':', $window['close']));
+            $open = $base->setTime($open_hour, $open_minute);
+            $close = $base->setTime($close_hour, $close_minute);
+            $parts[] = '<span class="ulhgr-special-date-card__window"><time class="ulhgr-special-date-card__opens" datetime="' . esc_attr($window['open']) . '">' . esc_html(wp_date($time_format, $open->getTimestamp(), $timezone)) . '</time><span class="ulhgr-special-date-card__separator" aria-hidden="true">–</span><span class="ulhgr-visually-hidden">' . esc_html__(' to ', 'uplink-hours-greetings') . '</span><time class="ulhgr-special-date-card__closes" datetime="' . esc_attr($window['close']) . '">' . esc_html(wp_date($time_format, $close->getTimestamp(), $timezone)) . '</time></span>';
+        }
+        return $parts ? implode('<span class="ulhgr-special-date-card__between">, </span>', $parts) : '<span class="ulhgr-special-date-card__status">' . esc_html__('Hours not set', 'uplink-hours-greetings') . '</span>';
+    }
+
     /** Plain text values for builders that own their element markup. */
     public function plain_value($display = 'greeting') {
-        if (!in_array($display, array('greeting', 'date', 'both', 'status', 'schedule'), true)) {
+        if (!in_array($display, array('greeting', 'date', 'both', 'status', 'schedule', 'special_dates'), true)) {
             return '';
         }
         if ('schedule' === $display) {
@@ -1961,7 +2095,7 @@ class Uplink_Hours_Greetings_Plugin {
     private function render_how_to_tab() {
         ?>
         <div class="ulhgr-usage-grid">
-            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Insert the Uplink Hours & Greetings block, then choose greeting, date, both, open or closed status, or weekly schedule in the block sidebar.', 'uplink-hours-greetings'); ?></p></section>
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('WORDPRESS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Block editor', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use Uplink Hours & Greetings for greeting, date, status, or weekly schedule output. Use the separate Uplink Special Dates block to show one selected date or a configurable list of upcoming holidays, closures, and sales dates.', 'uplink-hours-greetings'); ?></p></section>
             <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('BRICKS', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Query Loop and dynamic tags', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Enable Query Loop on a Div or Container and choose Uplink Weekly Schedule. The current week automatically includes special-date overrides.', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_day}</code> <code>{ulhgr_hours}</code> <code>{ulhgr_state}</code> <code>{ulhgr_key}</code> <code>{ulhgr_today}</code> <code>{ulhgr_row_date}</code> <code>{ulhgr_row_is_special}</code> <code>{ulhgr_row_special_label}</code></p><p><?php esc_html_e('For semantic markup, put the repeating Div inside a dl and use dt and dd for the day and hours children. A Shortcode element with [uplink_hours_greetings display="schedule"] gives ready-made markup. Inline text tags:', 'uplink-hours-greetings'); ?></p><p><code>{ulhgr_greeting}</code> <code>{ulhgr_date}</code> <code>{ulhgr_both}</code> <code>{ulhgr_status}</code> <code>{ulhgr_status_label}</code> <code>{ulhgr_is_open}</code> <code>{ulhgr_next_change}</code> <code>{ulhgr_special_label}</code> <code>{ulhgr_schedule}</code></p></section>
             <section class="ulhgr-panel ulhgr-etch-guide"><p class="ulhgr-overline"><?php esc_html_e('ETCH', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Options data', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('Use a complete output directly, or bind individual values to elements you build and style in Etch.', 'uplink-hours-greetings'); ?></p>
                 <h3><?php esc_html_e('Ready-made outputs', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.greeting}</code> <code>{options.uplink_hours_greetings.date}</code> <code>{options.uplink_hours_greetings.both}</code> <code>{options.uplink_hours_greetings.status_output}</code> <code>{options.uplink_hours_greetings.schedule}</code></p>
@@ -1969,7 +2103,7 @@ class Uplink_Hours_Greetings_Plugin {
                 <h3><?php esc_html_e('Live status and special dates', 'uplink-hours-greetings'); ?></h3><p><code>{options.uplink_hours_greetings.is_open}</code> <code>{options.uplink_hours_greetings.status}</code> <code>{options.uplink_hours_greetings.status_label}</code> <code>{options.uplink_hours_greetings.current_window.start_label}</code> <code>{options.uplink_hours_greetings.current_window.end_label}</code> <code>{options.uplink_hours_greetings.next_change.type}</code> <code>{options.uplink_hours_greetings.next_change.time}</code> <code>{options.uplink_hours_greetings.next_change.countdown}</code> <code>{options.uplink_hours_greetings.special_label}</code></p>
                 <h3><?php esc_html_e('Weekly schedule loop', 'uplink-hours-greetings'); ?></h3><p><?php esc_html_e('Add an Etch Loop block. Set Target to options.uplink_hours_greetings.week and Item ID to day. Inside it, build the row with native elements and these values:', 'uplink-hours-greetings'); ?></p><p><code>{day.day}</code> <code>{day.date}</code> <code>{day.hours}</code> <code>{day.state}</code> <code>{day.key}</code> <code>{day.number}</code> <code>{day.is_today}</code> <code>{day.is_special}</code> <code>{day.special_label}</code></p><p><?php esc_html_e('Each day also includes windows. A separate loop is available at options.uplink_hours_greetings.special_dates.', 'uplink-hours-greetings'); ?></p>
             </section>
-            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="both"]</code> <code>[uplink_hours_greetings display="status"]</code> <code>[uplink_hours_greetings display="schedule"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Use timezone, tz_abbr, date_format, and display parameters where supported.', 'uplink-hours-greetings'); ?></p></section>
+            <section class="ulhgr-panel"><p class="ulhgr-overline"><?php esc_html_e('SHORTCODE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Shortcode and PHP', 'uplink-hours-greetings'); ?></h2><p><code>[uplink_hours_greetings]</code> <code>[uplink_hours_greetings display="status"]</code> <code>[uplink_hours_greetings display="schedule"]</code> <code>[uplink_hours_greetings display="special_dates"]</code></p><p><code>[uplink_hours_greetings display="special_dates" special_date_mode="single" special_date="2026-11-27"]</code></p><p><code>uplink_hours_greetings_echo( array( 'display' => 'schedule' ) );</code></p><p><?php esc_html_e('Special-date output also accepts special_date_limit, show_message, and show_hours.', 'uplink-hours-greetings'); ?></p></section>
             <section class="ulhgr-panel ulhgr-appearance-guide"><p class="ulhgr-overline"><?php esc_html_e('APPEARANCE', 'uplink-hours-greetings'); ?></p><h2><?php esc_html_e('Style the output', 'uplink-hours-greetings'); ?></h2><p><?php esc_html_e('The WordPress block inherits theme colors and typography. Its sidebar also provides color, spacing, and type controls. Bricks and Etch values are plain text, so style their elements in the builder.', 'uplink-hours-greetings'); ?></p><p><?php esc_html_e('These variables control the WordPress greeting and date defaults:', 'uplink-hours-greetings'); ?></p><pre class="ulhgr-css-example"><code>.wp-block-uplink-hours-greetings-hours-greetings {
     --ulhgr-greeting-font-weight: 600;
     --ulhgr-date-font-style: italic;

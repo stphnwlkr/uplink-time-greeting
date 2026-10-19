@@ -14,10 +14,10 @@ Administrators can use the **Permissions** tab to allow additional roles or indi
 
 | Editor | Insert |
 | --- | --- |
-| WordPress block editor | **Uplink Hours & Greetings** block; choose Greeting, Date, or Both. |
+| WordPress block editor | **Uplink Hours & Greetings** for greeting, date, status, or schedule; **Uplink Special Dates** for one saved date or an upcoming list. |
 | Bricks | Set a layout element's Query Loop type to **Uplink Weekly Schedule** and use `{ulhgr_day}` and `{ulhgr_hours}` in child elements. A Shortcode element with `[uplink_hours_greetings display="schedule"]` provides ready-made semantic markup. `{ulhgr_schedule}` remains available as inline plain text. |
 | Etch | Loop over `options.uplink_hours_greetings.week` to build a schedule with your own HTML and classes. Complete outputs, current and next entries, next opening, timezone, current clock, individual days, and machine-readable windows are available under `options.uplink_hours_greetings`. |
-| Shortcode | `[uplink_hours_greetings]`, `[uplink_hours_greetings display="date"]`, `[uplink_hours_greetings display="both"]`, or `[uplink_hours_greetings display="schedule"]`. |
+| Shortcode | `[uplink_hours_greetings]`, `[uplink_hours_greetings display="status"]`, `[uplink_hours_greetings display="schedule"]`, or `[uplink_hours_greetings display="special_dates"]`. |
 | PHP | `uplink_hours_greetings_echo( array( 'display' => 'both' ) );` |
 
 Blocks and shortcodes refresh countdowns and schedule changes on the page. Bricks tags and Etch options data are plain text resolved at page render time; use a shortcode-capable element for a live countdown. Page caching can delay the plain-text values.

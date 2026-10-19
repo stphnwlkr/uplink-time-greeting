@@ -16,7 +16,7 @@ Build reusable daily schedules with up to 24 entries each. Assign the same sched
 
 Use {time} and {tz} in messages, or {countdown} for time until the next entry. {next_label} and {next_time} describe that entry. Mark an entry as Opening to use {opening_countdown} and {opening_time}, even when the next opening is on another day. Example: a 5:00 AM message can say "It's {time}. We open in {countdown}." before a 7:00 AM Opening entry.
 
-The WordPress block and shortcode render semantic, styleable weekly hours, live status, and special-date overrides. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements. Etch receives complete outputs, computed open status, current window, next change, special dates, individual days, and an ordered week array for custom markup. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. Optional LocalBusiness structured data publishes the same regular and special hours to search engines.
+The WordPress blocks and shortcode render semantic, styleable weekly hours, live status, and special-date overrides. The dedicated Uplink Special Dates block can show one selected promotion or an upcoming list of holidays, closures, and sales dates. Bricks offers a Uplink Weekly Schedule query type so each day can be designed with native layout elements. Etch receives complete outputs, computed open status, current window, next change, special dates, individual days, and an ordered week array for custom markup. Weekly schedule output uses the site's Week Starts On setting. The timezone follows the WordPress site setting by default, with an optional override. Optional LocalBusiness structured data publishes the same regular and special hours to search engines.
 
 Administrators can grant update access to additional roles or individual users in the Permissions tab. Administrator access is always retained.
 
@@ -50,11 +50,12 @@ Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item 
 
 = Is there a shortcode? =
 
-Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="date"], [uplink_hours_greetings display="both"], or [uplink_hours_greetings display="schedule"]. The shortcode also accepts date_format, timezone, and tz_abbr.
+Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [uplink_hours_greetings display="schedule"], or [uplink_hours_greetings display="special_dates"]. For one saved date, add special_date_mode="single" and special_date="YYYY-MM-DD". Upcoming lists accept special_date_limit, show_message, and show_hours.
 
 == Changelog ==
 
 = 1.1.0 =
+* Added a dedicated Uplink Special Dates block with single-date and upcoming-list modes.
 * Added special-date overrides for holidays, closures, and reduced hours.
 * Added computed open status, current window, and next status change.
 * Added optional LocalBusiness structured data with special opening hours.
