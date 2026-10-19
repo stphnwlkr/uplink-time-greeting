@@ -48,7 +48,7 @@ For a set-and-forget Bricks announcement, add a Dynamic data condition to its wr
 
 = How do I use it in Etch? =
 
-Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item ID day. Build the row with native Etch elements and use {day.day}, {day.date}, {day.hours}, {day.state}, {day.key}, {day.number}, {day.is_today}, {day.is_special}, {day.special_label}, {day.special_link_url}, and {day.special_link_label}. Direct data includes greeting, date, both, status_output, schedule, is_open, status, status_label, current_window, next_change, special_dates, timezone, now, current, next, opening, and days. The plugin's How to Use tab lists every path.
+Add an Etch Loop block with Target options.uplink_hours_greetings.week and Item ID day. Build the row with native Etch elements and use {day.day}, {day.date}, {day.hours}, {day.state}, {day.key}, {day.number}, {day.is_today}, {day.is_special}, {day.special_label}, {day.special_link_url}, and {day.special_link_label}. Current and next special-date values are available directly without a loop. For upcoming events, loop over options.uplink_hours_greetings.upcoming_special_dates; each item includes date, date_label, label, message, hours, closed, link values, and date-state flags. The plugin's How to Use tab lists every path.
 
 = Is there a shortcode? =
 
@@ -65,6 +65,7 @@ Yes. Use [uplink_hours_greetings], [uplink_hours_greetings display="status"], [u
 * Added an Uplink Special Dates query source for building upcoming event lists in Bricks.
 * Added no-loop Bricks tags for the next upcoming special date.
 * Grouped Bricks dynamic tags by direct and required query-loop context.
+* Added enriched current, next, upcoming, and all-date values for Etch.
 * Organized How to Use guidance into Blocks and shortcodes, Etch, and Bricks Builder tabs.
 * Added an open or closed status display to the block and shortcode.
 
